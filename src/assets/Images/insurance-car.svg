@@ -1,0 +1,32 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#071323"/>
+      <stop offset="0.55" stop-color="#0A2B63"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(320 150) rotate(45) scale(560 440)">
+      <stop stop-color="#60A5FA" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="160" y1="130" x2="1060" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect width="1200" height="720" fill="url(#glow)"/>
+  <rect x="150" y="120" width="900" height="480" rx="44" fill="url(#glass)" stroke="white" stroke-opacity="0.12" stroke-width="2"/>
+  <g opacity="0.9">
+    <path d="M410 430L470 340C484 318 508 305 534 305H745C771 305 795 318 809 340L870 430" stroke="white" stroke-opacity="0.85" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M380 430H920C946 430 968 452 968 478V510C968 536 946 558 920 558H280C254 558 232 536 232 510V478C232 452 254 430 280 430H320" stroke="white" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="360" cy="558" r="38" fill="#0B1220" fill-opacity="0.35" stroke="#93C5FD" stroke-opacity="0.9" stroke-width="10"/>
+    <circle cx="840" cy="558" r="38" fill="#0B1220" fill-opacity="0.35" stroke="#93C5FD" stroke-opacity="0.9" stroke-width="10"/>
+    <path d="M510 430H740" stroke="#60A5FA" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g opacity="0.32">
+    <path d="M180 260C330 180 470 210 600 190C760 165 900 120 1050 70" stroke="white" stroke-opacity="0.35" stroke-width="4"/>
+    <path d="M170 310C320 225 490 260 610 235C780 200 930 150 1080 105" stroke="white" stroke-opacity="0.28" stroke-width="3"/>
+  </g>
+</svg>
+

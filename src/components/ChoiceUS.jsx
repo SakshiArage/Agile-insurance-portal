@@ -1,0 +1,111 @@
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+
+import "swiper/css";
+
+// Update feature titles, descriptions, and icons here to change the "Why Choose Us" carousel.
+const features = [
+  { id: 1, title: "AI Fraud Detection", desc: "Detect suspicious claims instantly using advanced AI verification systems.", icon: "🛡️" },
+  { id: 2, title: "24/7 Customer Support", desc: "Real-time human + AI support anytime from anywhere.", icon: "💬" },
+  { id: 3, title: "Fast Claim Processing", desc: "Verification and processing completed within minutes.", icon: "⚡" },
+  { id: 4, title: "Smart Policy Tracking", desc: "Track and manage all policies from one dashboard.", icon: "📄" },
+  { id: 5, title: "Advanced Security", desc: "Military-grade encryption for secure insurance management.", icon: "🔒" },
+  { id: 6, title: "AI Voice Assistant", desc: "Smart multilingual voice support for quick assistance.", icon: "🎙️" },
+];
+
+const InsuranceSlider = () => {
+  return (
+    <section className="w-full bg-white py-20 overflow-hidden">
+      {/* Change the carousel eyebrow and heading here. */}
+      {/* Heading */}
+      <div className="text-center mb-14 px-6">
+        <p className="text-blue-600 uppercase tracking-[4px] text-sm font-semibold mb-4">
+          Why Choose Us
+        </p>
+        <h2 className="text-black text-3xl md:text-3xl font-bold leading-tight">
+          Trusted Digital Insurance Experience
+        </h2>
+      </div>
+
+      {/* Slider */}
+      <div className="w-full">
+        <Swiper
+          modules={[Autoplay]}
+          slidesPerView={"auto"}
+          centeredSlides={true}
+          loop={true} // Enables infinite loop
+          loopedSlides={6} // Tells Swiper how many slides to keep ready for the loop
+          spaceBetween={30}
+          speed={1200} // Speed of the sliding transition (Premium feel)
+          autoplay={{
+            delay: 2500, // Time it stays on one slide before moving
+            disableOnInteraction: false,
+          }}
+          className="!overflow-visible"
+        >
+          {/* Duplicate the array items to ensure the loop never "stacks" or gaps */}
+          {[...features, ...features].map((item, index) => (
+            <SwiperSlide
+              key={index}
+              className="!w-[82vw] sm:!w-[320px] md:!w-[380px]" // Adjusted width for better focus
+            >
+              {({ isActive }) => (
+                <div
+                  className={`
+                    rounded-[32px]
+                    border
+                    p-6
+                    md:p-10
+                    min-h-[260px]
+                    sm:min-h-[280px]
+                    bg-white
+                    flex
+                    flex-col
+                    justify-between
+                    transition-all
+                    duration-700
+                    ease-in-out
+                    ${
+                      isActive
+                        ? "border-blue-500 scale-100 shadow-2xl z-10" // Focused Card
+                        : "border-slate-200 scale-[0.88] opacity-100 shadow-md" // Side Cards
+                    }
+                  `}
+                >
+                  {/* Top: Icon and Badge */}
+                  <div className="flex items-center justify-between">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-colors ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}`}>
+                      {item.icon}
+                    </div>
+                    {isActive && (
+                      <span className="text-[10px] text-blue-600 border border-blue-200 px-3 py-1 rounded-full font-bold uppercase tracking-widest bg-blue-50/50">
+                        Active
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Middle: Content */}
+                  <div>
+                    <h3 className={`text-xl font-bold mb-3 transition-colors ${isActive ? 'text-black' : 'text-slate-400'}`}>
+                      {item.title}
+                    </h3>
+                    <p className={`leading-relaxed text-sm transition-colors ${isActive ? 'text-slate-600' : 'text-slate-300'}`}>
+                      {item.desc}
+                    </p>
+                  </div>
+
+                  {/* Bottom: Link */}
+                  <button className={`text-sm font-bold flex items-center gap-2 transition-all ${isActive ? 'text-blue-600' : 'text-slate-300'}`}>
+                    Learn More {isActive ? '→' : ''}
+                  </button>
+                </div>
+              )}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </section>
+  );
+};
+
+export default InsuranceSlider;

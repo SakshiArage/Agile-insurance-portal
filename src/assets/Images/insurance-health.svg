@@ -1,0 +1,38 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1220"/>
+      <stop offset="0.5" stop-color="#0A2E6A"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(860 170) rotate(135) scale(520 420)">
+      <stop stop-color="#93C5FD" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#93C5FD" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="card" x1="140" y1="120" x2="1060" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect width="1200" height="720" fill="url(#glow)"/>
+  <g opacity="0.9">
+    <path d="M190 560C320 455 420 480 520 380C640 250 780 260 1010 160" stroke="white" stroke-opacity="0.12" stroke-width="4"/>
+    <path d="M210 600C360 470 420 520 560 395C710 260 840 260 1040 190" stroke="white" stroke-opacity="0.10" stroke-width="3"/>
+  </g>
+  <g>
+    <rect x="150" y="120" width="900" height="480" rx="44" fill="url(#card)" stroke="white" stroke-opacity="0.12" stroke-width="2"/>
+    <circle cx="330" cy="240" r="86" fill="white" fill-opacity="0.09"/>
+    <path d="M330 190C374 190 410 226 410 270C410 318 374 352 330 352C286 352 250 318 250 270C250 226 286 190 330 190Z" stroke="white" stroke-opacity="0.85" stroke-width="10"/>
+    <path d="M330 218V322" stroke="#38BDF8" stroke-width="14" stroke-linecap="round"/>
+    <path d="M278 270H382" stroke="#38BDF8" stroke-width="14" stroke-linecap="round"/>
+    <g opacity="0.88">
+      <path d="M520 410C590 332 662 312 724 290C820 255 912 235 990 210" stroke="white" stroke-opacity="0.18" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="724" cy="290" r="10" fill="#38BDF8"/>
+      <circle cx="820" cy="255" r="10" fill="#38BDF8"/>
+      <circle cx="912" cy="235" r="10" fill="#38BDF8"/>
+      <circle cx="990" cy="210" r="10" fill="#38BDF8"/>
+    </g>
+  </g>
+</svg>
+
