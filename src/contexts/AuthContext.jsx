@@ -17,7 +17,13 @@ const safeJsonParse = (value, fallback) => {
   }
 };
 
-const readUsers = () => safeJsonParse(localStorage.getItem(STORAGE_USERS), []);
+const readUsers = () => {
+  const users = safeJsonParse(localStorage.getItem(STORAGE_USERS), []);
+  // Keep old/corrupted localStorage values from breaking register/login array checks.
+  if (Array.isArray(users)) return users;
+  localStorage.setItem(STORAGE_USERS, JSON.stringify([]));
+  return [];
+};
 
 const writeUsers = (users) => {
   localStorage.setItem(STORAGE_USERS, JSON.stringify(users));

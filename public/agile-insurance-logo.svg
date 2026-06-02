@@ -1,5 +1,7 @@
-<!-- Browser tab icon. It intentionally mirrors public/agile-insurance-logo.svg. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Agile Insurance">
+<!-- Agile Insurance brand logo. Replace this SVG to update the logo across the app and browser tab. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Agile Insurance Logo</title>
+  <desc id="desc">Blue shield with an Agile Insurance A mark and protection check.</desc>
   <defs>
     <linearGradient id="shield" x1="16" y1="8" x2="86" y2="88" gradientUnits="userSpaceOnUse">
       <stop stop-color="#2563eb"/>

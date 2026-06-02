@@ -22,6 +22,8 @@ import { useAuth } from "../contexts/useAuth";
 import FloatingAiAssistant from "../components/FloatingAiAssistant";
 
 const STORAGE_THEME = "agile_insurance_theme_v1";
+// Dashboard brand logo path. Replace the SVG in public/ to refresh the sidebar and favicon branding.
+const AGILE_LOGO_SRC = "/agile-insurance-logo.svg";
 
 // Dashboard sidebar labels, icons, and routes are defined here.
 const navItems = [
@@ -136,9 +138,7 @@ const DashboardLayout = () => {
                   className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-3 py-2 text-left hover:bg-slate-100/70 dark:hover:bg-white/5"
                   aria-label="Go to homepage"
                 >
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-600 text-xl font-bold text-white">
-                    A
-                  </div>
+                  <img src={AGILE_LOGO_SRC} alt="Agile Insurance logo" className="h-11 w-11 shrink-0" />
                   <div className="min-w-0">
                     <div className="truncate text-base font-black leading-tight">Agile Insurance</div>
                     <div className="truncate text-xs text-slate-500 dark:text-slate-400">
@@ -271,9 +271,7 @@ const DashboardLayout = () => {
                   onClick={() => goTo("/")}
                   className="flex items-center gap-3 rounded-2xl px-3 py-2 text-left hover:bg-slate-100/70 dark:hover:bg-white/5"
                 >
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-600 text-xl font-bold text-white">
-                    A
-                  </div>
+                  <img src={AGILE_LOGO_SRC} alt="Agile Insurance logo" className="h-11 w-11 shrink-0" />
                   <div className="min-w-0">
                     <div className="truncate text-base font-black leading-tight">Agile Insurance</div>
                     <div className="truncate text-xs text-slate-500 dark:text-slate-400">AI-powered portal</div>

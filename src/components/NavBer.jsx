@@ -13,6 +13,9 @@ import {
 import { useAuth } from "../contexts/useAuth";
 
 // Header brand text, dropdown labels, CTA labels, and trust-strip labels live in this file.
+// Update this path if the Agile Insurance brand logo file is renamed or replaced.
+const AGILE_LOGO_SRC = "/agile-insurance-logo.svg";
+
 const Navbar = () => {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -102,12 +105,13 @@ const Navbar = () => {
             {/* Left Side */}
             <div className="flex min-w-0 items-center gap-6 xl:gap-14">
 
-            {/* Brand icon letter, brand name, and tagline in the header. */}
-            {/* Logo */}
+            {/* Brand logo, brand name, and tagline in the public header. */}
             <Link to="/" className="flex min-w-0 items-center gap-2 sm:gap-3 cursor-pointer">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg sm:text-xl">
-                A
-                </div>
+                <img
+                src={AGILE_LOGO_SRC}
+                alt="Agile Insurance logo"
+                className="h-10 w-10 shrink-0 sm:h-11 sm:w-11"
+                />
 
                 <div className="min-w-0">
                 <h1 className="truncate text-base sm:text-2xl font-bold text-[#111827] leading-none">
