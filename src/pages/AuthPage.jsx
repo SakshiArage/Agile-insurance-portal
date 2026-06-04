@@ -56,6 +56,8 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const resetMessaging = () => {
     setError("");
@@ -192,16 +194,18 @@ const AuthPage = () => {
   }
 
   return (
-    <div className="relative min-h-[85vh] overflow-hidden bg-gradient-to-b from-white to-slate-50 px-4 py-10 sm:px-6 sm:py-16">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-white to-slate-50 px-4 py-8 sm:px-6 sm:py-12">
+      {/* Background decorative blur elements */}
       <div className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]" />
       <div className="pointer-events-none absolute -bottom-40 left-24 h-[460px] w-[460px] rounded-full bg-indigo-600/10 blur-[120px]" />
 
+      {/* Two-column layout: Auth card on left, Benefits card on right */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
-          className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur-xl sm:p-8 lg:rounded-[2.8rem] lg:p-10"
+          className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-xl sm:p-7"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -277,10 +281,17 @@ const AuthPage = () => {
                     <input
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      type="password"
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-12 py-4 text-sm font-medium text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-500"
+                      type={showPassword ? "text" : "password"}
+                      className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-20 text-sm font-medium text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-500"
                       placeholder="Password"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
                   </div>
                 </label>
 
@@ -292,10 +303,17 @@ const AuthPage = () => {
                       <input
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        type="password"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-12 py-4 text-sm font-medium text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-500"
+                        type={showConfirmPassword ? "text" : "password"}
+                        className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-20 text-sm font-medium text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-500"
                         placeholder="Confirm password"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((value) => !value)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
+                      >
+                        {showConfirmPassword ? "Hide" : "Show"}
+                      </button>
                     </div>
                   </label>
                 ) : (
@@ -400,34 +418,74 @@ const AuthPage = () => {
           </form>
         </motion.div>
 
+        {/* Benefits and Features Card - Right Side */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 text-white shadow-[0_40px_120px_rgba(2,6,23,0.35)] sm:p-8 lg:rounded-[2.8rem] lg:p-10"
+          className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 text-white shadow-lg sm:p-8"
         >
+          {/* Header badge */}
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/90">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Frontend demo - Local storage
+            Agile Insurance - Trusted Protection
           </div>
-          <h2 className="mt-6 text-2xl font-black tracking-tight sm:text-3xl">A connected portal built for trust.</h2>
+
+          {/* Main heading */}
+          <h2 className="mt-6 text-2xl font-black tracking-tight sm:text-3xl">
+            Why Choose Agile Insurance?
+          </h2>
           <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
-            User accounts, OTP verification, sessions, and document uploads now work from the frontend without
-            a server backend.
+            Complete insurance solutions with verified protection, transparent pricing, and hassle-free claims processing.
           </p>
 
+          {/* Features Grid */}
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
-              { title: "Verified Email", desc: "Registration creates a local demo OTP before account activation." },
-              { title: "Google Sign-In", desc: "Continue with a provider-backed account when Google is configured." },
-              { title: "Document Vault", desc: "Uploaded documents are stored in local frontend demo storage." },
-              { title: "Responsive UI", desc: "Auth and dashboard layouts adapt across mobile, tablet, and desktop." },
+              { title: "Verified Email", desc: "Secure registration with OTP verification for account safety." },
+              { title: "Wide Coverage", desc: "Insurance options for health, life, vehicle, travel, and business." },
+              { title: "Fast Claims", desc: "Quick claim processing with transparent settlement process." },
+              { title: "Expert Support", desc: "24/7 customer support team ready to assist you anytime." },
+              { title: "Flexible Plans", desc: "Customizable insurance plans tailored to your needs." },
+              { title: "Document Vault", desc: "Secure storage for all your insurance documents and policies." },
             ].map((x) => (
-              <div key={x.title} className="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <div key={x.title} className="rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
                 <div className="text-sm font-bold">{x.title}</div>
                 <div className="mt-2 text-sm text-white/70">{x.desc}</div>
               </div>
             ))}
+          </div>
+
+          {/* Insurance Benefits Section */}
+          <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="text-lg font-black mb-4">Insurance Benefits</div>
+            <div className="space-y-3">
+              {[
+                "✓ Premium protection at affordable rates",
+                "✓ No hidden charges or surprise fees",
+                "✓ Instant policy activation",
+                "✓ Cashless hospital treatment",
+                "✓ Claim settlement in 24-48 hours",
+                "✓ Life-time renewal guaranteed",
+              ].map((benefit, idx) => (
+                <div key={idx} className="flex items-center gap-3 text-sm text-white/80">
+                  <span className="text-emerald-400 font-bold">{benefit.split("✓")[0]}✓</span>
+                  <span>{benefit.split("✓")[1]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-8 grid grid-cols-2 gap-4 text-center">
+            <div className="rounded-xl bg-white/10 p-3">
+              <div className="text-2xl font-black text-emerald-400">50K+</div>
+              <div className="mt-1 text-xs text-white/70">Happy Customers</div>
+            </div>
+            <div className="rounded-xl bg-white/10 p-3">
+              <div className="text-2xl font-black text-blue-400">4.8/5</div>
+              <div className="mt-1 text-xs text-white/70">Star Rating</div>
+            </div>
           </div>
         </motion.div>
       </div>

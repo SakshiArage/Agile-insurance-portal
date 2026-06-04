@@ -81,7 +81,10 @@ const DashboardNavList = ({ compact = false, pathname, onNavigate }) => (
 const DashboardUserCard = ({ compact = false, user }) =>
   compact ? null : (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        {user?.profilePhoto ? (
+          <img src={user.profilePhoto} alt={user?.fullName ?? "Member"} className="h-10 w-10 rounded-2xl object-cover" />
+        ) : null}
         <div className="min-w-0">
           <div className="truncate text-sm font-bold">{user?.fullName ?? "Member"}</div>
           <div className="truncate text-xs text-slate-500 dark:text-slate-400">{user?.email}</div>
@@ -97,13 +100,21 @@ const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem(STORAGE_THEME) || "light");
+  const [profilePhoto, setProfilePhoto] = useState(() => user?.profilePhoto || "");
   // The top-right profile control intentionally shows only the user's first initial.
   const profileInitial = (user?.fullName?.trim()?.[0] || user?.email?.trim()?.[0] || "A").toUpperCase();
+  const displayUser = { ...user, profilePhoto };
 
   useEffect(() => {
     setHtmlTheme(theme);
     localStorage.setItem(STORAGE_THEME, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const syncProfile = (event) => setProfilePhoto(event.detail?.profilePhoto || "");
+    window.addEventListener("agile-profile-updated", syncProfile);
+    return () => window.removeEventListener("agile-profile-updated", syncProfile);
+  }, []);
 
   const activeLabel = useMemo(() => {
     const match = navItems.find((i) => i.to === location.pathname);
@@ -161,7 +172,7 @@ const DashboardLayout = () => {
             <DashboardNavList compact={collapsed} pathname={location.pathname} onNavigate={goTo} />
 
             <div className="mt-4 space-y-2">
-              <DashboardUserCard compact={collapsed} user={user} />
+              <DashboardUserCard compact={collapsed} user={displayUser} />
               <button
                 onClick={doLogout}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100/70 dark:text-slate-200 dark:hover:bg-white/5"
@@ -251,9 +262,13 @@ const DashboardLayout = () => {
                   aria-label="Profile"
                   title="Profile"
                 >
-                  <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 font-black text-white">
-                    {profileInitial}
-                  </span>
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt={user?.fullName ?? "Profile"} className="h-10 w-10 rounded-2xl object-cover" />
+                  ) : (
+                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 font-black text-white">
+                      {profileInitial}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -279,7 +294,7 @@ const DashboardLayout = () => {
                 </button>
                 <DashboardNavList pathname={location.pathname} onNavigate={goTo} />
                 <div className="mt-4 space-y-2">
-                  <DashboardUserCard user={user} />
+                  <DashboardUserCard user={displayUser} />
                   <button
                     onClick={doLogout}
                     className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100/70 dark:text-slate-200 dark:hover:bg-white/5"

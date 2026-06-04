@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 import {
   Plus,
@@ -12,31 +13,54 @@ import {
   FaTwitter
 } from "react-icons/fa";
 
+// Footer component - site-wide footer with navigation, trust indicators, and legal info
+// Contains 4 main navigation sections, payment methods, security badge, and social links
 const Footer = () => {
-  // Footer column titles and link labels are controlled here. Links become local hash anchors by default.
+  // Footer navigation structure
+  // EDIT HERE: Add, remove, or modify footer sections and links
+  // Format: { title: "Section Name", links: [{ label: "Link Text", to: "/route" }], hasIcon: true/false }
+  // hasIcon shows a "+" icon before each link for visual consistency
   const sections = [
     {
       title: "Insurance",
-      links: ["General Insurance", "Life Insurance", "Term Insurance", "Investment", "Health Insurance", "Other Insurance"],
+      links: [
+        { label: "General Insurance", to: "/general-insurance" },
+        { label: "Life Insurance", to: "/life-insurance" },
+        { label: "Term Insurance", to: "/term-insurance" },
+        { label: "Investment", to: "/investment" },
+        { label: "Health Insurance", to: "/health-insurance" },
+        { label: "Other Insurance", to: "/other-insurance" },
+      ],
       hasIcon: true
     },
     {
       title: "Calculators",
       links: [
-        "Investment Calculators", "Fitness Calculators", "Income Tax Calculator", 
-        "Term Insurance Calculator", "EMI Calculator", "LIC Calculator", 
-        "Life Insurance Calculator", "Health Insurance Calculator", 
-        "Travel Insurance Calculator", "Car Insurance Calculator", "Bike Insurance Calculator"
+        { label: "Insurance Premium Calculator", to: "/calculator?type=premium" },
+        { label: "Term Insurance Calculator", to: "/calculator?type=term" },
+        { label: "EMI Calculator", to: "/calculator?type=emi" },
+        { label: "Car Insurance Calculator", to: "/calculator?type=car" },
       ],
       hasIcon: true
     },
     {
       title: "Resources",
-      links: ["Articles", "Customer reviews", "Insurance companies", "Newsroom", "Awards"]
+      links: [
+        { label: "Articles", to: "/articles" },
+        { label: "Customer reviews", to: "/reviews" },
+        { label: "Insurance companies", to: "/companies" },
+        { label: "Newsroom", to: "/newsroom" },
+        { label: "Awards", to: "/awards" }
+      ]
     },
     {
       title: "Agile Claim",
-      links: ["About Us", "Careers", "Legal & Admin policies", "Contact us"]
+      links: [
+        { label: "About Us", to: "/about-us" },
+        { label: "Careers", to: "/careers" },
+        { label: "Legal & Admin policies", to: "/legal-policies" },
+        { label: "Contact us", to: "/contact" }
+      ]
     }
   ];
 
@@ -55,7 +79,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#051024] text-gray-400 px-4 py-12 sm:px-6 sm:py-16 lg:px-24 font-sans border-t rounded-t-4xl border-slate-800">
+    <footer className="bg-[#051024] text-gray-400 px-4 py-8 sm:px-6 sm:py-10 lg:px-24 font-sans border-t rounded-t-3xl border-slate-800">
       <motion.div 
         variants={containerVariants}
         initial="hidden"
@@ -64,20 +88,24 @@ const Footer = () => {
         className="container mx-auto"
       >
         {/* TOP SECTION: LINKS */}
-        <div className="grid grid-cols-1 gap-8 mb-12 sm:grid-cols-2 md:grid-cols-4 md:gap-10 md:mb-16">
+        <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 md:grid-cols-4 md:gap-8 md:mb-10">
           {sections.map((section, idx) => (
             <div key={idx}>
-              <h4 className="text-white font-semibold mb-6 text-lg">{section.title}</h4>
-              <ul className="space-y-3">
+              <h4 className="text-white font-semibold mb-4 text-base">{section.title}</h4>
+              <ul className="space-y-2">
                 {section.links.map((link, lIdx) => (
-                  <motion.li 
-                    key={lIdx} 
+                  <motion.li
+                    key={lIdx}
                     variants={itemVariants}
                     whileHover={{ x: 5, color: "#fff" }}
                     className="flex items-center gap-2 cursor-pointer transition-colors text-sm"
                   >
                     {section.hasIcon && <Plus size={14} className="text-gray-500" />}
-                    <a href={`#${link.replace(/\s+/g, '-').toLowerCase()}`}>{link}</a>
+                    {typeof link === "string" ? (
+                      <a href={`#${link.replace(/\s+/g, '-').toLowerCase()}`} className="cursor-pointer hover:text-white transition-colors">{link}</a>
+                    ) : (
+                      <Link to={link.to} className="cursor-pointer hover:text-white transition-colors">{link.label}</Link>
+                    )}
                   </motion.li>
                 ))}
               </ul>
@@ -86,7 +114,7 @@ const Footer = () => {
         </div>
 
       {/* MIDDLE SECTION: TRUST BAR */}
-      <div className="bg-[#0a192f] border border-slate-800 rounded-xl p-5 sm:p-8 mb-12 flex flex-col lg:flex-row justify-between items-center gap-8">
+      <div className="bg-[#0a192f] border border-slate-800 rounded-xl p-4 sm:p-5 mb-8 flex flex-col lg:flex-row justify-between items-center gap-5">
 
         {/* Payment method names and logos can be changed in src/assets/assets.js and the labels below. */}
         {/* Payment Methods */}
@@ -159,12 +187,19 @@ const Footer = () => {
     </p>
 
     <div className="flex gap-4">
-      {[FaFacebook, FaYoutube, FaLinkedin, FaTwitter].map((Icon, index) => (
+      {[
+        { Icon: FaFacebook, url: "https://www.facebook.com" },
+        { Icon: FaYoutube, url: "https://www.youtube.com" },
+        { Icon: FaLinkedin, url: "https://www.linkedin.com" },
+        { Icon: FaTwitter, url: "https://www.twitter.com" }
+      ].map(({ Icon, url }, index) => (
         <motion.a
           key={index}
           whileHover={{ y: -5, backgroundColor: "#1e293b" }}
-          href="#"
-          className="bg-slate-800 p-3 rounded-lg text-white transition-colors"
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="bg-slate-800 p-3 rounded-lg text-white transition-colors cursor-pointer hover:text-blue-400"
         >
           <Icon size={18} />
         </motion.a>
@@ -174,7 +209,7 @@ const Footer = () => {
 </div>
         {/* Legal company name, registration, contact, and disclaimer copy live in this block. */}
         {/* BOTTOM SECTION: DISCLAIMER */}
-        <div className="space-y-4 text-[11px] leading-relaxed text-slate-500 max-w-6xl mx-auto">
+        <div className="space-y-3 text-[10px] leading-relaxed text-slate-500 max-w-6xl mx-auto">
           <div className="flex gap-2">
             <div className="min-w-[8px] h-[8px] rounded-full bg-slate-700 mt-1"></div>
             <p>

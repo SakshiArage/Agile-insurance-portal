@@ -1,11 +1,15 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import PublicLayout from "./layouts/PublicLayout";
+import AuthLayout from "./layouts/AuthLayout";
 import AuthPage from "./pages/AuthPage";
 import CategoryPage from "./pages/CategoryPage";
 import PolicyDetailsPage from "./pages/PolicyDetailsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import AdminPage from "./pages/AdminPage";
+import CalculatorPage from "./pages/CalculatorPage";
+import InfoPage from "./pages/InfoPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
@@ -20,14 +24,15 @@ import DashboardProfile from "./pages/dashboard/DashboardProfile";
 import DashboardSecurity from "./pages/dashboard/DashboardSecurity";
 import NotFoundPage from "./pages/NotFoundPage";
 
-// Route table for public pages, protected checkout/success pages, and dashboard sections.
-// Add or rename URLs here when changing the frontend navigation structure.
+// Main app routing configuration
+// Routes are organized by layout type: public, auth-only, admin, and protected dashboard
 const App = () => {
   return (
     <Routes>
+      {/* Public routes - includes navbar, footer, and floating AI assistant */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/calculator" element={<CalculatorPage />} />
         <Route path="/:categorySlug" element={<CategoryPage />} />
         <Route path="/policies/:policyId" element={<PolicyDetailsPage />} />
         <Route
@@ -46,8 +51,33 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* Footer navigation information pages */}
+        <Route path="/general-insurance" element={<InfoPage />} />
+        <Route path="/life-insurance" element={<InfoPage />} />
+        <Route path="/term-insurance" element={<InfoPage />} />
+        <Route path="/investment" element={<InfoPage />} />
+        <Route path="/health-insurance" element={<InfoPage />} />
+        <Route path="/other-insurance" element={<InfoPage />} />
+        <Route path="/articles" element={<InfoPage />} />
+        <Route path="/reviews" element={<InfoPage />} />
+        <Route path="/companies" element={<InfoPage />} />
+        <Route path="/newsroom" element={<InfoPage />} />
+        <Route path="/awards" element={<InfoPage />} />
+        <Route path="/about-us" element={<InfoPage />} />
+        <Route path="/careers" element={<InfoPage />} />
+        <Route path="/legal-policies" element={<InfoPage />} />
+        <Route path="/contact" element={<InfoPage />} />
       </Route>
 
+      {/* Auth routes - minimal layout (no navbar/footer) for focused authentication experience */}
+      <Route element={<AuthLayout />}>
+        <Route path="/auth" element={<AuthPage />} />
+      </Route>
+
+      {/* Admin routes - specialized admin interface with role-based access */}
+      <Route path="/admin" element={<AdminPage />} />
+
+      {/* Protected dashboard routes - requires authentication */}
       <Route
         path="/dashboard"
         element={
@@ -69,6 +99,7 @@ const App = () => {
         <Route path="security" element={<DashboardSecurity />} />
       </Route>
 
+      {/* Fallback routes */}
       <Route path="/app" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -1,32 +1,115 @@
-import { Clock3, Mail, MapPin, MessageCircle, PhoneCall, ShieldCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Clock3, Mail, MapPin, MessageCircle, PhoneCall, Send, ShieldCheck } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { useAuth } from "../../contexts/useAuth";
 
-// Contact details shown on the dashboard Contact Us page.
+// Support chat storage key in localStorage for persistence
+const SUPPORT_CHAT_KEY = "agile_insurance_support_chats_v1";
+
+// Utility to safely parse JSON from localStorage
+const safeJsonParse = (value, fallback) => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
+// Load all support chats from localStorage
+const readChats = () => {
+  const chats = safeJsonParse(localStorage.getItem(SUPPORT_CHAT_KEY), []);
+  return Array.isArray(chats) ? chats : [];
+};
+
+// Save all support chats to localStorage
+const saveChats = (chats) => {
+  localStorage.setItem(SUPPORT_CHAT_KEY, JSON.stringify(chats));
+};
+
+// Contact information displayed on the contact page
+// Edit these details to update phone, email, and support information across the app
 const contactDetails = [
   {
     label: "Mobile number",
-    value: "+91 98765 43210",
+    value: "+91 79726 57424",
     helper: "Available for policy, claim, renewal, and account support.",
     icon: PhoneCall,
-    href: "tel:+919876543210",
+    href: "tel:+917972657424",
   },
   {
     label: "Email address",
-    value: "care@agileclaim.com",
+    value: "contact@kshetrapati.com",
     helper: "Send documents, payment issues, or service requests anytime.",
     icon: Mail,
-    href: "mailto:care@agileclaim.com",
+    href: "mailto:contact@kshetrapati.com",
   },
   {
     label: "WhatsApp support",
-    value: "+91 98765 43210",
+    value: "+91 79726 57424",
     helper: "Chat with support for quick claim, payment, and renewal updates.",
     icon: FaWhatsapp,
-    href: "https://wa.me/919876543210?text=Hi%20Agile%20Claim%20Support%2C%20I%20need%20help%20with%20my%20insurance%20account.",
+    href: "https://wa.me/917972657424?text=Hi%20Support%2C%20I%20need%20help%20with%20my%20insurance%20account.",
   },
 ];
 
+// Main contact dashboard component - displays contact info and support chat interface
 const DashboardContact = () => {
+  const { user } = useAuth();
+  // Load chats from localStorage on component mount
+  const [chats, setChats] = useState(() => readChats());
+  const [subject, setSubject] = useState("Policy support");
+  const [message, setMessage] = useState("");
+
+  // Filter chats for current user thread
+  const userThread = useMemo(
+    () => chats.filter((chat) => chat.userEmail === user?.email),
+    [chats, user?.email],
+  );
+
+  // Send message handler - creates new chat or adds to existing thread
+  const sendMessage = () => {
+    const text = message.trim();
+    if (!text) return;
+
+    // Create new message object with metadata
+    const nextMessage = {
+      id: `msg_${Date.now()}`,
+      from: "user",
+      sender: user?.fullName || "Customer",
+      text,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Check if open chat exists for this user
+    const existing = chats.find((chat) => chat.userEmail === user?.email && chat.status !== "Resolved");
+
+    // Update existing chat or create new one
+    const nextChats = existing
+      ? chats.map((chat) =>
+          chat.id === existing.id
+            ? { ...chat, subject, status: "Open", messages: [...chat.messages, nextMessage], updatedAt: new Date().toISOString() }
+            : chat,
+        )
+      : [
+          {
+            id: `chat_${Date.now()}`,
+            userId: user?.id,
+            userName: user?.fullName || "Customer",
+            userEmail: user?.email || "guest@agile.demo",
+            subject,
+            priority: "Medium",
+            status: "Open",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            messages: [nextMessage],
+          },
+          ...chats,
+        ];
+    setChats(nextChats);
+    saveChats(nextChats);
+    setMessage("");
+  };
+
   return (
     <div className="space-y-8">
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5 sm:p-8">
@@ -45,7 +128,7 @@ const DashboardContact = () => {
           </div>
 
           <a
-            href="https://wa.me/919876543210?text=Hi%20Agile%20Claim%20Support%2C%20I%20need%20help%20with%20my%20insurance%20account."
+            href="https://wa.me/917972657424?text=Hi%20Support%2C%20I%20need%20help%20with%20my%20insurance%20account."
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-sm font-black text-white shadow-sm hover:opacity-95"
@@ -90,7 +173,7 @@ const DashboardContact = () => {
         {[
           { title: "Working hours", value: "Mon-Sat, 9:00 AM - 7:00 PM", icon: Clock3 },
           { title: "Quick message", value: "Reply within 24 working hours", icon: MessageCircle },
-          { title: "Office", value: "Sector 44, Gurugram, Haryana", icon: MapPin },
+          { title: "Office", value: "Office 101 & 102, Tower B1, Vishwakarma Business Centre, Wagholi, Pune - 412207", icon: MapPin },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -110,6 +193,82 @@ const DashboardContact = () => {
             </div>
           );
         })}
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+        {/* Chat input area - professional messaging interface */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5 sm:p-8">
+          <div className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white mb-5">
+            <MessageCircle size={18} className="text-blue-600 dark:text-blue-400" />
+            Chat with Admin Support Team
+          </div>
+          {/* Subject and message input row */}
+          <div className="grid gap-4 sm:grid-cols-[200px_1fr_auto]">
+            {/* Subject dropdown - categorize support inquiries */}
+            <select
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-white/10 dark:bg-white/5 dark:text-white transition"
+            >
+              {["Policy support", "Claim issue", "Payment issue", "Document verification", "Complaint"].map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+            {/* Message input field - type your query here */}
+            <input
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  sendMessage();
+                }
+              }}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 transition"
+              placeholder="Type your query and press Enter to send..."
+            />
+            {/* Send button - submit your message to admin */}
+            <button
+              onClick={sendMessage}
+              disabled={!message.trim()}
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Send message to support admin"
+            >
+              <Send size={16} />
+              Send
+            </button>
+          </div>
+        </div>
+
+        {/* Chat message display - read messages from support thread */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5 sm:p-6">
+          <div className="text-sm font-black text-slate-900 dark:text-white mb-4">Your Support Thread</div>
+          {/* Messages container with auto-scroll */}
+          <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2">
+            {!userThread.length ? (
+              <div className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-600 dark:bg-white/5 dark:text-slate-300 text-center">
+                <MessageCircle size={24} className="mx-auto mb-2 opacity-50" />
+                No messages yet. Send your first query to get support.
+              </div>
+            ) : (
+              userThread.flatMap((chat) =>
+                chat.messages.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`rounded-2xl px-4 py-3 text-sm font-semibold animate-in fade-in ${
+                      item.from === "admin"
+                        ? "bg-blue-50 text-blue-900 border-l-4 border-blue-600 dark:bg-blue-500/10 dark:text-blue-200 dark:border-blue-400"
+                        : "bg-slate-100 text-slate-700 border-l-4 border-slate-400 dark:bg-white/5 dark:text-slate-200 dark:border-slate-500"
+                    }`}
+                  >
+                    <div className="text-xs font-black uppercase tracking-wide opacity-70 mb-1">{item.sender}</div>
+                    <div className="leading-relaxed">{item.text}</div>
+                  </div>
+                )),
+              )
+            )}
+          </div>
+        </div>
       </section>
     </div>
   );

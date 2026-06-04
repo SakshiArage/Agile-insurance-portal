@@ -9,6 +9,35 @@ const DashboardProfile = () => {
   const [members, setMembers] = useState(() => load("family", []));
   const [name, setName] = useState("");
   const [relation, setRelation] = useState("Spouse");
+  const [profilePhoto, setProfilePhoto] = useState(() => user?.profilePhoto || "");
+
+  const updateStoredUser = (changes) => {
+    const sessionKey = "agile_insurance_session_v1";
+    const usersKey = "agile_insurance_users_v1";
+    const session = JSON.parse(localStorage.getItem(sessionKey) || "null");
+    const storedUsers = JSON.parse(localStorage.getItem(usersKey) || "[]");
+    const nextSessionUser = { ...(session?.user || user || {}), ...changes };
+
+    localStorage.setItem(sessionKey, JSON.stringify({ user: nextSessionUser }));
+    if (Array.isArray(storedUsers)) {
+      localStorage.setItem(
+        usersKey,
+        JSON.stringify(storedUsers.map((storedUser) => (storedUser.id === nextSessionUser.id ? { ...storedUser, ...changes } : storedUser))),
+      );
+    }
+    window.dispatchEvent(new CustomEvent("agile-profile-updated", { detail: nextSessionUser }));
+  };
+
+  const uploadPhoto = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const nextPhoto = String(reader.result || "");
+      setProfilePhoto(nextPhoto);
+      updateStoredUser({ profilePhoto: nextPhoto });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const add = () => {
     const n = name.trim();
@@ -45,6 +74,23 @@ const DashboardProfile = () => {
           <div className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-slate-100">
             <User size={18} className="text-blue-600 dark:text-blue-400" />
             User profile
+          </div>
+          <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-white/10 dark:bg-white/5 sm:flex-row sm:items-center">
+            {profilePhoto ? (
+              <img src={profilePhoto} alt={user?.fullName ?? "User"} className="h-20 w-20 rounded-3xl object-cover" />
+            ) : (
+              <span className="grid h-20 w-20 place-items-center rounded-3xl bg-blue-600 text-xl font-black text-white">
+                {(user?.fullName?.[0] || user?.email?.[0] || "U").toUpperCase()}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-black text-slate-900 dark:text-white">{user?.fullName ?? "Member"}</div>
+              <div className="mt-1 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{user?.email}</div>
+            </div>
+            <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
+              Upload Photo
+              <input type="file" accept="image/*" className="hidden" onChange={(event) => uploadPhoto(event.target.files?.[0])} />
+            </label>
           </div>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
