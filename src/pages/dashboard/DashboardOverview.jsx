@@ -16,7 +16,7 @@ import { useAuth } from "../../contexts/useAuth";
 
 const formatInr = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 
-// Dashboard overview labels, summary cards, quick actions, and demo activity text are managed here.
+// Dashboard overview labels, summary cards, quick actions, and activity text are managed here.
 const MiniLine = ({ values = [] }) => {
   const pts = useMemo(() => {
     if (!values.length) return "";
@@ -218,7 +218,7 @@ const DashboardOverview = () => {
             <div>
               <div className="text-sm font-black text-slate-900 dark:text-slate-100">Policy distribution</div>
               <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                Split by category based on your purchases (demo)
+                Split by category based on your purchases
               </div>
             </div>
             <Link to="/dashboard/policies" className="text-sm font-black text-blue-600 dark:text-blue-400">
@@ -246,7 +246,7 @@ const DashboardOverview = () => {
             <div>
               <div className="text-sm font-black text-slate-900 dark:text-slate-100">Quick actions</div>
               <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                Everything is clickable and functional (frontend-only)
+                Open policies, claims, payments, documents, or support
               </div>
             </div>
           </div>

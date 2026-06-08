@@ -106,7 +106,7 @@ const DashboardProfile = () => {
             ))}
           </div>
           <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 text-sm font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            Editing profile fields is intentionally disabled in this demo to keep auth state consistent.
+            Profile changes are managed through the account verification workflow.
           </div>
         </div>
 

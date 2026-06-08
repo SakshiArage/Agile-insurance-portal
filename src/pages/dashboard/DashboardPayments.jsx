@@ -33,7 +33,7 @@ const DashboardPayments = () => {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
               <ShieldCheck size={16} className="text-blue-600 dark:text-blue-400" />
-              Payment history • Secure gateway UI • EMI options (demo)
+              Payment history - Secure gateway - EMI options
             </div>
             <h1 className="mt-6 text-3xl font-black tracking-tight text-slate-900 dark:text-white">Payments</h1>
             <p className="mt-2 text-slate-600 dark:text-slate-300">Track invoices, auto-pay, and yearly analytics.</p>
@@ -67,7 +67,7 @@ const DashboardPayments = () => {
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-sm font-black text-slate-900 dark:text-slate-100">Yearly insurance expenses</div>
-              <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Monthly breakdown (mock)</div>
+              <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Monthly payment breakdown</div>
             </div>
             <span className="rounded-full bg-blue-600/10 px-4 py-2 text-xs font-black text-blue-700 dark:text-blue-300">
               {payments.length} payments
@@ -113,10 +113,10 @@ const DashboardPayments = () => {
 
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
-              { t: "Encryption", d: "Tokenized payments (demo)" },
+              { t: "Encryption", d: "Tokenized payments" },
               { t: "Fraud checks", d: "AI risk scan simulation" },
               { t: "EMI plans", d: "Available on select policies" },
-              { t: "Instant receipts", d: "Invoice download (mock)" },
+              { t: "Instant receipts", d: "Invoice download" },
             ].map((x) => (
               <div key={x.t} className="rounded-3xl border border-white/10 bg-white/5 p-5">
                 <div className="text-sm font-black">{x.t}</div>
@@ -131,7 +131,7 @@ const DashboardPayments = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm font-black text-slate-900 dark:text-slate-100">Payment history</div>
-            <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Download invoices (mock)</div>
+            <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Download invoices</div>
           </div>
           <button
             onClick={() => setPayments(load("payments", []))}
@@ -162,7 +162,7 @@ const DashboardPayments = () => {
               >
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => window.alert("Invoice download is mocked in this frontend-only demo.")}
+                    onClick={() => window.alert("Invoice download is being prepared.")}
                     className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-600/10 text-blue-700 dark:text-blue-300"
                   >
                     <Download size={18} />

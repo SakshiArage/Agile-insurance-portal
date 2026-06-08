@@ -2,7 +2,7 @@ import { useState } from "react";
 import { KeyRound, Lock, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 import { load, save } from "../../utils/storage";
 
-// Security page headings, toggle labels, and linked-account demo copy are controlled here.
+// Security page headings, toggle labels, and linked-account copy are controlled here.
 const DashboardSecurity = () => {
   const [twoFactor, setTwoFactor] = useState(() => load("security", { twoFactor: false }).twoFactor);
   const [bankLinked, setBankLinked] = useState(() => load("security", { bankLinked: true }).bankLinked ?? true);
@@ -20,7 +20,7 @@ const DashboardSecurity = () => {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
               <ShieldCheck size={16} className="text-blue-600 dark:text-blue-400" />
-              Security settings • Two-factor auth • Linked accounts (demo)
+              Security settings - Two-factor auth - Linked accounts
             </div>
             <h1 className="mt-6 text-3xl font-black tracking-tight text-slate-900 dark:text-white">Security</h1>
             <p className="mt-2 text-slate-600 dark:text-slate-300">Configure enhanced security for your insurance portal.</p>
@@ -64,7 +64,7 @@ const DashboardSecurity = () => {
             Linked bank accounts
           </div>
           <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            Link accounts for claim payouts and premium auto-pay (demo).
+            Link accounts for claim payouts and premium auto-pay.
           </div>
           <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-white/10 dark:bg-white/5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div>
@@ -87,10 +87,10 @@ const DashboardSecurity = () => {
       <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-5 text-white shadow-[0_40px_120px_rgba(2,6,23,0.35)] dark:border-white/10 sm:rounded-[2.6rem] sm:p-8">
         <div className="flex items-center gap-2 text-sm font-black">
           <Lock size={18} />
-          Change password (demo)
+          Change password
         </div>
         <div className="mt-2 text-sm font-semibold text-white/70">
-          Password changes are disabled in this demo flow. Authentication is stored locally for simulation.
+          Password changes should be completed from the secure account service.
         </div>
       </div>
     </div>

@@ -95,7 +95,7 @@ const DashboardContact = () => {
             id: `chat_${Date.now()}`,
             userId: user?.id,
             userName: user?.fullName || "Customer",
-            userEmail: user?.email || "guest@agile.demo",
+            userEmail: user?.email || "guest@agile.insurance",
             subject,
             priority: "Medium",
             status: "Open",

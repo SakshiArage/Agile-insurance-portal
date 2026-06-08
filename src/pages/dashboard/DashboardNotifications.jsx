@@ -23,13 +23,13 @@ const DashboardNotifications = () => {
       list.push({
         type: "claim",
         title: "Claim update",
-        body: `Claim ${c.id} status: ${c.status}. AI verification: ${c.aiStatus}.`,
+        body: `Claim ${c.id} status: ${c.status}. Verification: ${c.aiStatus || "Pending"}.`,
       });
     });
     list.push({
       type: "fraud",
       title: "Fraud alert monitor",
-      body: "Agile AI monitors anomalies and alerts you proactively (demo).",
+      body: "Agile Insurance monitors claim and policy activity for important account alerts.",
     });
     return list;
   }, [purchases, claims]);
@@ -41,7 +41,7 @@ const DashboardNotifications = () => {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
               <ShieldCheck size={16} className="text-blue-600 dark:text-blue-400" />
-              Notifications • Reminders • AI insights
+              Notifications - Reminders - Account alerts
             </div>
             <h1 className="mt-6 text-3xl font-black tracking-tight text-slate-900 dark:text-white">Notifications</h1>
             <p className="mt-2 text-slate-600 dark:text-slate-300">Payment reminders, claim updates and AI suggestions.</p>

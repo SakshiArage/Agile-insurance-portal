@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BadgeCheck,
   Bot,
   FileUp,
   ShieldCheck,
@@ -11,8 +10,9 @@ import {
 } from "lucide-react";
 import { load, save, uid } from "../../utils/storage";
 import { chance } from "../../utils/ids";
+import { useAuth } from "../../contexts/useAuth";
 
-// Claim flow step names, status labels, form labels, and demo claim results are controlled here.
+// Claim flow step names, status labels, and form labels are controlled here.
 const claimSteps = [
   "Select claim type",
   "Fill smart form",
@@ -25,6 +25,7 @@ const claimSteps = [
 
 const statusPalette = {
   Draft: "bg-slate-600/10 text-slate-700 dark:text-slate-200",
+  Pending: "bg-amber-600/10 text-amber-700 dark:text-amber-300",
   "AI Verification": "bg-blue-600/10 text-blue-700 dark:text-blue-300",
   Reviewing: "bg-amber-600/10 text-amber-700 dark:text-amber-300",
   Approved: "bg-emerald-600/10 text-emerald-700 dark:text-emerald-300",
@@ -32,7 +33,13 @@ const statusPalette = {
 };
 
 const DashboardClaims = () => {
-  const [claims, setClaims] = useState(() => load("claims", []));
+  const { user } = useAuth();
+  const readMyClaims = () => {
+    const allClaims = load("claims", []);
+    if (!user?.id) return allClaims;
+    return allClaims.filter((claim) => !claim.userId || claim.userId === user.id);
+  };
+  const [claims, setClaims] = useState(readMyClaims);
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -58,40 +65,44 @@ const DashboardClaims = () => {
   const submit = async () => {
     if (!form.description.trim()) return window.alert("Please add a claim description.");
     if (!String(form.amount).trim()) return window.alert("Please enter claim amount.");
-    if (!form.docName.trim()) return window.alert("Please upload documents (mock).");
+    if (!form.docName.trim()) return window.alert("Please upload supporting documents.");
     setBusy(true);
     await new Promise((r) => setTimeout(r, 900));
     const now = new Date().toISOString();
     const all = load("claims", []);
     all.unshift({
       id: uid("claim"),
+      userId: user?.id || "",
+      user: user?.fullName || "Customer",
+      email: user?.email || "",
       type: form.type,
+      policy: form.type,
       description: form.description.trim(),
       amount: Number(form.amount) || 0,
       docName: form.docName,
-      status: "AI Verification",
-      aiStatus: "Running",
+      status: "Pending",
+      aiStatus: "Pending",
       createdAt: now,
       timeline: [
         { at: now, label: "Claim filed" },
         { at: now, label: "Documents uploaded" },
-        { at: now, label: "AI verification started" },
+        { at: now, label: "Sent to claims team" },
       ],
-      progress: 3,
+      progress: 2,
     });
     save("claims", all);
     setBusy(false);
     setOpen(false);
-    setClaims(load("claims", []));
+    setClaims(readMyClaims());
   };
 
   const runAi = async (id) => {
     const all = load("claims", []);
     const idx = all.findIndex((c) => c.id === id);
     if (idx < 0) return;
-    all[idx] = { ...all[idx], aiStatus: "Verifying…" };
+    all[idx] = { ...all[idx], aiStatus: "Verifying..." };
     save("claims", all);
-    setClaims(load("claims", []));
+    setClaims(readMyClaims());
     await new Promise((r) => setTimeout(r, 900));
     const approved = !chance(0.18);
     const now = new Date().toISOString();
@@ -105,22 +116,7 @@ const DashboardClaims = () => {
       timeline,
     };
     save("claims", all);
-    setClaims(load("claims", []));
-  };
-
-  const finalize = async (id, outcome) => {
-    const all = load("claims", []);
-    const idx = all.findIndex((c) => c.id === id);
-    if (idx < 0) return;
-    const now = new Date().toISOString();
-    all[idx] = {
-      ...all[idx],
-      status: outcome,
-      progress: 7,
-      timeline: [...(all[idx].timeline || []), { at: now, label: outcome === "Approved" ? "Claim approved" : "Claim rejected" }],
-    };
-    save("claims", all);
-    setClaims(load("claims", []));
+    setClaims(readMyClaims());
   };
 
   return (
@@ -130,7 +126,7 @@ const DashboardClaims = () => {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
               <ShieldCheck size={16} className="text-blue-600 dark:text-blue-400" />
-              Claim management • AI verification • Timeline tracking
+              Claim management - Document review - Status tracking
             </div>
             <h1 className="mt-6 text-3xl font-black tracking-tight text-slate-900 dark:text-white">Claims</h1>
             <p className="mt-2 text-slate-600 dark:text-slate-300">File new claims and track progress end-to-end.</p>
@@ -150,7 +146,7 @@ const DashboardClaims = () => {
             <div>
               <div className="text-sm font-black text-slate-900 dark:text-slate-100">Existing claims</div>
               <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                Clickable and functional — stored locally
+                Your submitted claims and latest admin decisions
               </div>
             </div>
             <span className="rounded-full bg-blue-600/10 px-4 py-2 text-xs font-black text-blue-700 dark:text-blue-300">
@@ -166,7 +162,7 @@ const DashboardClaims = () => {
                 </div>
                 <div className="mt-6 text-xl font-black text-slate-900 dark:text-white">No claims yet</div>
                 <div className="mt-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                  File your first claim to see AI verification and timeline tracking.
+                  File your first claim to start review and track every status update.
                 </div>
               </div>
             ) : (
@@ -180,7 +176,7 @@ const DashboardClaims = () => {
                       <div className="text-xs font-bold text-slate-500 dark:text-slate-400">Claim ID</div>
                       <div className="mt-2 truncate text-lg font-black text-slate-900 dark:text-white">{c.id}</div>
                       <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                        {c.type} • ₹{Number(c.amount || 0).toLocaleString("en-IN")} • {c.description}
+                        {c.type} - INR {Number(c.amount || 0).toLocaleString("en-IN")} - {c.description}
                       </div>
                     </div>
                     <span className={`rounded-full px-4 py-2 text-xs font-black ${statusPalette[c.status] || statusPalette.Draft}`}>
@@ -213,23 +209,12 @@ const DashboardClaims = () => {
                         Run AI verification
                       </button>
                     ) : null}
-                    {c.status === "Reviewing" ? (
-                      <>
-                        <button
-                          onClick={() => finalize(c.id, "Approved")}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:opacity-95"
-                        >
-                          <BadgeCheck size={16} />
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => finalize(c.id, "Rejected")}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-                        >
-                          Reject
-                        </button>
-                      </>
-                    ) : null}
+                    <button
+                      onClick={() => setClaims(readMyClaims())}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                    >
+                      Refresh Status
+                    </button>
                   </div>
                 </div>
               ))
@@ -255,10 +240,10 @@ const DashboardClaims = () => {
           <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-5 text-white shadow-[0_40px_120px_rgba(2,6,23,0.35)] dark:border-white/10 sm:rounded-[2.6rem] sm:p-8">
             <div className="flex items-center gap-2 text-sm font-black">
               <Timer size={18} />
-              AI verification status
+              Review status
             </div>
             <div className="mt-3 text-sm font-semibold text-white/70">
-              Agile AI checks documents for mismatches, duplicates, and fraud signals (demo simulation).
+              Claim officers verify documents, coverage, and payment eligibility before posting a decision.
             </div>
             <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm font-semibold text-white/80">
               Tip: Upload clear, readable documents to improve AI confidence.
@@ -328,11 +313,11 @@ const DashboardClaims = () => {
                         value={form.description}
                         onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                         className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-                        placeholder="Describe the incident and claim details…"
+                        placeholder="Describe the incident and claim details..."
                       />
                     </label>
                     <label className="block space-y-2">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Claim amount (₹)</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Claim amount (INR)</span>
                       <input
                         value={form.amount}
                         onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value.replace(/[^\d]/g, "").slice(0, 8) }))}
@@ -346,13 +331,13 @@ const DashboardClaims = () => {
 
                 {step === 2 ? (
                   <div className="space-y-4">
-                    <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">Upload documents (mock)</div>
+                    <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">Upload documents</div>
                     <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 dark:border-white/10 dark:bg-white/5">
                       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                         <div>
                           <div className="text-sm font-black text-slate-900 dark:text-white">Upload bills, FIR, photos</div>
                           <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                            Stored as filename locally. No backend.
+                            Attach supporting documents for review.
                           </div>
                         </div>
                         <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:opacity-95">
@@ -379,10 +364,10 @@ const DashboardClaims = () => {
                     <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-white/10 dark:bg-white/5">
                       <div className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
                         <Bot size={18} className="text-blue-600 dark:text-blue-400" />
-                        AI verification preview
+                        Verification preview
                       </div>
                       <div className="mt-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                        Agile AI checks document clarity, duplicates, and mismatch risk (demo). Continue to submit to run.
+                        The claims team checks document clarity, duplicates, coverage, and mismatch risk.
                       </div>
                       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {["Document clarity: High", "Mismatch risk: Low", "Fraud signals: None", "Estimated approval: 82%"].map((t) => (
@@ -418,7 +403,7 @@ const DashboardClaims = () => {
                     disabled={busy}
                     className="rounded-2xl bg-emerald-600 px-7 py-3 text-sm font-black text-white shadow-sm hover:opacity-95 disabled:opacity-70"
                   >
-                    {busy ? "Submitting…" : "Submit claim"}
+                    {busy ? "Submitting..." : "Submit claim"}
                   </button>
                 )}
               </div>

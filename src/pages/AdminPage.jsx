@@ -12,6 +12,7 @@ import {
   Eye,
   FileText,
   Headphones,
+  History,
   KeyRound,
   LayoutDashboard,
   LineChart,
@@ -33,10 +34,14 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { uid } from "../utils/storage";
 
 const STORAGE_USERS = "agile_insurance_users_v1";
 const STORAGE_SESSION = "agile_insurance_session_v1";
 const STORAGE_ADMINS = "agile_insurance_admins_v1";
+const STORAGE_CLAIMS = "agile_insurance_claims_v1";
+const STORAGE_AUDIT_LOGS = "agile_insurance_audit_logs_v1";
+const STORAGE_SYSTEM_SETTINGS = "agile_insurance_system_settings_v1";
 // Support chat storage key - shared with user dashboard contact page
 // EDIT HERE: Change storage key if migrating chat data to a different location
 const STORAGE_SUPPORT_CHATS = "agile_insurance_support_chats_v1";
@@ -93,8 +98,9 @@ const navItems = [
   { id: "policies", label: "Policy Management", icon: FileText, roles: ["Super Admin", "Insurance Manager"] },
   { id: "documents", label: "Document Verification", icon: ShieldCheck, roles: ["Super Admin", "Claims Officer"] },
   { id: "reports", label: "Reports & Analytics", icon: BarChart3, roles: ["Super Admin", "Insurance Manager"] },
+  { id: "audit", label: "Audit Logs", icon: History, roles: ["Super Admin"] },
   { id: "profile", label: "Admin Profile", icon: UserCog, roles: ["Super Admin", "Insurance Manager", "Claims Officer", "Support Executive"] },
-  { id: "settings", label: "Settings", icon: Settings, roles: ["Super Admin"] },
+  { id: "settings", label: "System Settings", icon: Settings, roles: ["Super Admin"] },
 ];
 
 const metrics = [
@@ -119,13 +125,6 @@ const claims = [
   { id: "CLM002", user: "Aarav Mehta", policy: "Car", amount: "INR 1,24,500", status: "Under Review", officer: "Nikhil P." },
   { id: "CLM003", user: "Meera Rao", policy: "Life", amount: "INR 7,50,000", status: "Approved", officer: "Fatima K." },
   { id: "CLM004", user: "Sana Khan", policy: "Travel", amount: "INR 82,000", status: "Documents", officer: "Dev A." },
-];
-
-const tickets = [
-  { id: "TKT001", user: "User A", subject: "Claim Issue", priority: "High", status: "Open" },
-  { id: "TKT002", user: "User B", subject: "Premium payment failed", priority: "Medium", status: "In Progress" },
-  { id: "TKT003", user: "User C", subject: "Policy document missing", priority: "Low", status: "Waiting for User" },
-  { id: "TKT004", user: "User D", subject: "Advisor callback request", priority: "High", status: "Open" },
 ];
 
 const requirements = [
@@ -161,8 +160,9 @@ const pageTitles = {
   documents: "Document Verification",
   notifications: "Notification Center",
   reports: "Reports & Analytics",
+  audit: "Audit Logs",
   profile: "Admin Profile",
-  settings: "Admin Settings",
+  settings: "System Settings",
 };
 
 const safeJsonParse = (value, fallback) => {
@@ -191,6 +191,91 @@ const saveSupportChats = (chats) => {
   localStorage.setItem(STORAGE_SUPPORT_CHATS, JSON.stringify(chats));
 };
 
+const normalizeClaim = (claim, index = 0) => {
+  const amount = typeof claim.amount === "number" ? `INR ${claim.amount.toLocaleString("en-IN")}` : claim.amount || "INR 0";
+  const status = claim.status === "Reviewing" || claim.status === "AI Verification" ? "Pending" : claim.status || "Pending";
+  return {
+    id: claim.id || claim.claimId || `CLM${String(index + 1).padStart(3, "0")}`,
+    user: claim.user || claim.fullName || claim.name || "Customer",
+    email: claim.email || "",
+    userId: claim.userId || "",
+    policy: claim.policy || claim.type || claim.policyName || "Insurance",
+    type: claim.type || claim.policy || "Insurance",
+    amount,
+    rawAmount: Number(claim.amount) || 0,
+    status,
+    officer: claim.officer || "Unassigned",
+    description: claim.description || "Claim submitted from customer portal.",
+    docName: claim.docName || claim.document || "Documents pending",
+    aiStatus: claim.aiStatus || "Pending",
+    progress: claim.progress || 2,
+    timeline: Array.isArray(claim.timeline) ? claim.timeline : [],
+    createdAt: claim.createdAt || new Date().toISOString(),
+    response: claim.response || "",
+    rejectionReason: claim.rejectionReason || "",
+  };
+};
+
+const readClaims = () => {
+  const storedClaims = safeJsonParse(localStorage.getItem(STORAGE_CLAIMS), []);
+  const source = Array.isArray(storedClaims) && storedClaims.length ? storedClaims : claims;
+  return source.map(normalizeClaim);
+};
+
+const writeClaims = (rows) => {
+  localStorage.setItem(STORAGE_CLAIMS, JSON.stringify(rows.map(normalizeClaim)));
+};
+
+const defaultSystemSettings = {
+  general: {
+    companyName: "Agile Insurance",
+    supportEmail: "support@agileinsure.in",
+    serviceTaxRate: 18,
+    claimSlaDays: 7,
+  },
+  kyc: {
+    aadhaarRequired: true,
+    panRequired: true,
+    selfieRequired: false,
+    autoRejectIncomplete: false,
+  },
+  claims: {
+    manualApprovalRequired: true,
+    highValueReviewAmount: 100000,
+    allowCustomerResubmission: true,
+    settlementDays: 5,
+  },
+  notifications: {
+    emailEnabled: true,
+    smsEnabled: true,
+    pushEnabled: false,
+    renewalReminderDays: 15,
+  },
+  security: {
+    twoFactorRequired: true,
+    sessionTimeoutMinutes: 30,
+    auditRetentionDays: 180,
+  },
+};
+
+const readSystemSettings = () => {
+  const saved = safeJsonParse(localStorage.getItem(STORAGE_SYSTEM_SETTINGS), null);
+  return saved ? { ...defaultSystemSettings, ...saved } : defaultSystemSettings;
+};
+
+const saveSystemSettings = (settings) => {
+  localStorage.setItem(STORAGE_SYSTEM_SETTINGS, JSON.stringify(settings));
+};
+
+const readAuditLogs = () => {
+  const logs = safeJsonParse(localStorage.getItem(STORAGE_AUDIT_LOGS), []);
+  return Array.isArray(logs) ? logs : [];
+};
+
+const saveAuditLogs = (logs) => {
+  localStorage.setItem(STORAGE_AUDIT_LOGS, JSON.stringify(logs));
+};
+
 const readRealUsers = () => {
   const storedUsers = safeJsonParse(localStorage.getItem(STORAGE_USERS), []);
   const session = safeJsonParse(localStorage.getItem(STORAGE_SESSION), null);
@@ -201,7 +286,7 @@ const readRealUsers = () => {
   return merged.map((user, index) => ({
     id: user.id || `USR-${index + 1}`,
     name: user.fullName || user.name || "Customer",
-    email: user.email || "not-provided@agile.demo",
+    email: user.email || "not-provided@agile.insurance",
     phone: user.phone || "Not added",
     policies: user.policyCount ?? 0,
     status: sessionUser?.id === user.id ? "Logged In" : "Active",
@@ -574,8 +659,8 @@ const AdminPage = () => {
     const realUsers = readRealUsers();
     return realUsers.length ? realUsers : users;
   });
-  const [claimRows, setClaimRows] = useState(claims);
-  const [ticketRows, setTicketRows] = useState(tickets);
+  const [claimRows, setClaimRows] = useState(readClaims);
+  const [claimFilter, setClaimFilter] = useState("pending");
   const [requirementRows, setRequirementRows] = useState(requirements);
   const [documentRows, setDocumentRows] = useState(documents);
   const [planRows, setPlanRows] = useState(policyPlans);
@@ -586,6 +671,8 @@ const AdminPage = () => {
   const [supportChats, setSupportChats] = useState(() => readSupportChats());
   const [selectedChat, setSelectedChat] = useState(null);
   const [adminReply, setAdminReply] = useState("");
+  const [auditLogs, setAuditLogs] = useState(readAuditLogs);
+  const [systemSettings, setSystemSettings] = useState(readSystemSettings);
   const [detail, setDetail] = useState({
     title: "Admin Activity",
     body: "Select a row or action to view operational context here.",
@@ -619,7 +706,33 @@ const AdminPage = () => {
     setDetail({ title: pageTitles[page], body: `You opened ${pageTitles[page]} as ${selectedProfile.role}.`, photo: "" });
   };
 
+  const addAudit = (action, target, details = "") => {
+    const entry = {
+      id: uid("audit"),
+      at: new Date().toISOString(),
+      admin: selectedProfile.name,
+      role: selectedProfile.role,
+      action,
+      target,
+      details: formatStructuredDetail(details),
+    };
+    setAuditLogs((logs) => {
+      const next = [entry, ...logs].slice(0, 200);
+      saveAuditLogs(next);
+      return next;
+    });
+  };
+
   const runAction = (title, body, photo = "") => setDetail({ title, body: formatStructuredDetail(body), photo });
+
+  const updateClaimRows = (updater, auditAction = "", auditTarget = "", auditDetails = "") => {
+    setClaimRows((rows) => {
+      const next = typeof updater === "function" ? updater(rows) : updater;
+      writeClaims(next);
+      return next;
+    });
+    if (auditAction) addAudit(auditAction, auditTarget, auditDetails);
+  };
 
   const refreshRealUsers = () => {
     const realUsers = readRealUsers();
@@ -629,9 +742,9 @@ const AdminPage = () => {
 
   const createCustomer = () => {
     const nextUser = {
-      id: `USR${Date.now().toString().slice(-5)}`,
+      id: uid("user"),
       name: "New Customer",
-      email: `customer${customerRows.length + 1}@agile.demo`,
+      email: `customer${customerRows.length + 1}@agile.insurance`,
       phone: "Not added",
       policies: 0,
       status: "Active",
@@ -656,27 +769,15 @@ const AdminPage = () => {
 
   const createClaim = () => {
     const nextClaim = {
-      id: `CLM${Date.now().toString().slice(-4)}`,
+      id: uid("claim"),
       user: customerRows[0]?.name || "New Customer",
       policy: "Health",
       amount: "INR 25,000",
       status: "Pending",
       officer: selectedProfile.name,
     };
-    setClaimRows((rows) => [nextClaim, ...rows]);
+    updateClaimRows((rows) => [normalizeClaim(nextClaim), ...rows], "Claim created", nextClaim.id, `Created by ${selectedProfile.name}`);
     runAction("Claim created", `${nextClaim.id} was created and assigned to ${selectedProfile.name}.`);
-  };
-
-  const createTicket = () => {
-    const nextTicket = {
-      id: `TKT${Date.now().toString().slice(-4)}`,
-      user: customerRows[0]?.name || "Customer",
-      subject: "New support query",
-      priority: "Medium",
-      status: "Open",
-    };
-    setTicketRows((rows) => [nextTicket, ...rows]);
-    runAction("Ticket created", `${nextTicket.id} is open.`);
   };
 
   const createRequirement = () => {
@@ -752,7 +853,7 @@ const AdminPage = () => {
       const rowKey = row.id || row.name || row.user || row.type;
       if (rowKey !== targetKey) return row;
       if (action === "approve") {
-        if (kind === "claims") return { ...row, status: "Approved" };
+        if (kind === "claims") return { ...row, status: "Approved", officer: selectedProfile.name, progress: 7, timeline: [...(row.timeline || []), { at: new Date().toISOString(), label: "Claim approved" }] };
         if (kind === "documents") return { ...row, status: "Approved" };
         if (kind === "policies") return { ...row, state: "Active" };
         if (kind === "support") return { ...row, status: "Resolved" };
@@ -764,13 +865,27 @@ const AdminPage = () => {
     const setter = {
       users: setCustomerRows,
       claims: setClaimRows,
-      support: setTicketRows,
       requirements: setRequirementRows,
       documents: setDocumentRows,
       policies: setPlanRows,
     }[kind];
 
-    setter((rows) => (action === "delete" ? rows.filter(remove) : rows.map(updater)));
+    const updateRows = (rows) => (action === "delete" ? rows.filter(remove) : rows.map(updater));
+    if (kind === "claims") {
+      updateClaimRows(
+        updateRows,
+        action === "delete" ? "Claim removed" : "Claim approved",
+        targetKey,
+        `${targetKey} was ${action === "delete" ? "removed" : "approved"} by ${selectedProfile.name}.`,
+      );
+    } else {
+      setter(updateRows);
+      addAudit(
+        action === "delete" ? "Record removed" : "Record approved",
+        targetKey,
+        `${targetKey} was ${action === "delete" ? "removed" : "approved"} by ${selectedProfile.name}.`,
+      );
+    }
     runAction(
       action === "delete" ? "Deleted" : "Approved",
       `${targetKey} was ${action === "delete" ? "removed" : "approved"} by ${selectedProfile.name}.`,
@@ -779,7 +894,12 @@ const AdminPage = () => {
 
   const respondToClaim = (claim) => {
     const message = `Dear ${claim.user}, your ${claim.policy} claim ${claim.id} is under review. Please keep your policy number, hospital bills, identity proof, and bank details ready.`;
-    setClaimRows((rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Under Review", response: message } : row)));
+    updateClaimRows(
+      (rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Pending", officer: selectedProfile.name, response: message, timeline: [...(row.timeline || []), { at: new Date().toISOString(), label: "Admin response sent" }] } : row)),
+      "Claim response sent",
+      claim.id,
+      message,
+    );
     runAction("Response sent to user", {
       claimId: claim.id,
       user: claim.user,
@@ -793,7 +913,12 @@ const AdminPage = () => {
     if (!claim.policy) missing.push("Policy type");
     if (claim.status === "Documents") missing.push("Required documents");
     const reason = missing.length ? `Missing details: ${missing.join(", ")}` : "Rejected after verification due to incomplete claim evidence";
-    setClaimRows((rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Rejected", rejectionReason: reason } : row)));
+    updateClaimRows(
+      (rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Rejected", officer: selectedProfile.name, rejectionReason: reason, progress: 7, timeline: [...(row.timeline || []), { at: new Date().toISOString(), label: "Claim rejected" }] } : row)),
+      "Claim rejected",
+      claim.id,
+      reason,
+    );
     runAction("Claim rejected", {
       claimId: claim.id,
       user: claim.user,
@@ -820,6 +945,42 @@ const AdminPage = () => {
       <ActionButton icon={Trash2} label="Delete" onClick={() => mutateRows(kind, target, "delete")} />
     </div>
   );
+
+  const claimTabs = [
+    { id: "pending", label: "Pending Claims", count: claimRows.filter((claim) => !["Approved", "Rejected"].includes(claim.status)).length },
+    { id: "accepted", label: "Accepted Claims", count: claimRows.filter((claim) => claim.status === "Approved").length },
+    { id: "rejected", label: "Rejected Claims", count: claimRows.filter((claim) => claim.status === "Rejected").length },
+    { id: "all", label: "All Claims", count: claimRows.length },
+  ];
+
+  const visibleClaimRows = claimRows.filter((claim) => {
+    if (claimFilter === "accepted") return claim.status === "Approved";
+    if (claimFilter === "rejected") return claim.status === "Rejected";
+    if (claimFilter === "pending") return !["Approved", "Rejected"].includes(claim.status);
+    return true;
+  });
+
+  const updateSystemSetting = (group, key, value) => {
+    setSystemSettings((settings) => {
+      const next = {
+        ...settings,
+        [group]: {
+          ...settings[group],
+          [key]: value,
+        },
+      };
+      saveSystemSettings(next);
+      return next;
+    });
+    addAudit("System setting updated", `${group}.${key}`, String(value));
+    runAction("Setting saved", `${group}.${key} updated to ${String(value)}.`);
+  };
+
+  const clearAuditLogs = () => {
+    setAuditLogs([]);
+    saveAuditLogs([]);
+    runAction("Audit logs cleared", `${selectedProfile.name} cleared the local audit log view.`);
+  };
 
   const renderDashboard = () => (
     <div className="space-y-6">
@@ -939,8 +1100,37 @@ const AdminPage = () => {
     if (activePage === "claims") {
       return (
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <SectionTitle icon={ClipboardCheck} title="Claims Management" action={<button onClick={createClaim} className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-black text-white transition hover:bg-blue-700"><Plus size={16} />Create Claim</button>} />
-          <DataTable columns={["id", "user", "policy", "amount", "status", "officer"]} rows={claimRows} renderActions={(row) => (
+          <SectionTitle
+            icon={ClipboardCheck}
+            title="Claims Management"
+            action={
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    const latestClaims = readClaims();
+                    setClaimRows(latestClaims);
+                    runAction("Claims refreshed", `${latestClaims.length} claims loaded from the customer claim store.`);
+                  }}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Refresh Claims
+                </button>
+                <button onClick={createClaim} className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-black text-white transition hover:bg-blue-700"><Plus size={16} />Create Claim</button>
+              </div>
+            }
+          />
+          <div className="mt-5 flex flex-wrap gap-2">
+            {claimTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setClaimFilter(tab.id)}
+                className={`rounded-lg border px-3 py-2 text-sm font-black transition ${claimFilter === tab.id ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"}`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+          <DataTable columns={["id", "user", "policy", "amount", "status", "officer"]} rows={visibleClaimRows} renderActions={(row) => (
             <div className="flex flex-wrap gap-1">
               {actionButtons(row, "claims")}
               <button onClick={() => respondToClaim(row)} className="rounded-lg border border-slate-200 px-2 py-2 text-xs font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
@@ -1005,7 +1195,7 @@ const AdminPage = () => {
 
         // Create admin response message with timestamp
         const nextMessage = {
-          id: `msg_${Date.now()}`,
+          id: uid("msg"),
           from: "admin",
           sender: selectedProfile.name,
           text: adminReply,
@@ -1220,6 +1410,37 @@ const AdminPage = () => {
         </section>
       );
     }
+    if (activePage === "audit") {
+      return (
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <SectionTitle
+            icon={History}
+            title="Audit Logs"
+            action={<button onClick={clearAuditLogs} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">Clear Logs</button>}
+          />
+          <div className="mt-5 overflow-hidden rounded-lg border border-slate-200">
+            <div className="grid grid-cols-[170px_160px_160px_1fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+              <div>Time</div>
+              <div>Admin</div>
+              <div>Action</div>
+              <div>Details</div>
+            </div>
+            <div className="max-h-[560px] overflow-auto">
+              {auditLogs.length ? auditLogs.map((log) => (
+                <div key={log.id} className="grid grid-cols-[170px_160px_160px_1fr] gap-3 border-t border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
+                  <div>{new Date(log.at).toLocaleString()}</div>
+                  <div>{log.admin}<div className="text-xs text-slate-500">{log.role}</div></div>
+                  <div className="font-black text-slate-950">{log.action}</div>
+                  <div>{log.target}<pre className="mt-1 whitespace-pre-wrap text-xs text-slate-500">{log.details}</pre></div>
+                </div>
+              )) : (
+                <div className="border-t border-slate-200 px-4 py-8 text-center text-sm font-bold text-slate-500">No audit entries yet.</div>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    }
     if (activePage === "profile") {
       return (
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -1315,10 +1536,41 @@ const AdminPage = () => {
     }
     return (
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <SectionTitle icon={Settings} title="Admin Settings" />
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {["Role Permissions", "Two-Factor Rules", "Audit Logs", "System Operations"].map((setting) => (
-            <button key={setting} onClick={() => runAction("Setting opened", setting)} className="rounded-lg border border-slate-200 p-4 text-left font-black hover:bg-slate-50">{setting}</button>
+        <SectionTitle icon={Settings} title="System Settings" />
+        <div className="mt-5 grid gap-5 xl:grid-cols-2">
+          {Object.entries(systemSettings).map(([group, values]) => (
+            <div key={group} className="rounded-lg border border-slate-200 p-5">
+              <div className="text-sm font-black capitalize text-slate-950">{group} Settings</div>
+              <div className="mt-4 space-y-4">
+                {Object.entries(values).map(([key, value]) => {
+                  const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+                  if (typeof value === "boolean") {
+                    return (
+                      <label key={key} className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 px-4 py-3">
+                        <span className="text-sm font-bold text-slate-700">{label}</span>
+                        <input
+                          type="checkbox"
+                          checked={value}
+                          onChange={(event) => updateSystemSetting(group, key, event.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300"
+                        />
+                      </label>
+                    );
+                  }
+                  return (
+                    <label key={key} className="block">
+                      <span className="text-xs font-black uppercase tracking-wide text-slate-500">{label}</span>
+                      <input
+                        className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none focus:border-blue-500"
+                        type={typeof value === "number" ? "number" : "text"}
+                        value={value}
+                        onChange={(event) => updateSystemSetting(group, key, typeof value === "number" ? Number(event.target.value) : event.target.value)}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -1336,6 +1588,7 @@ const AdminPage = () => {
           setActivePage("dashboard");
           setAdminNameDraft(selectedProfile.name);
           setDetail({ title: "Login successful", body: `${selectedProfile.name} signed in as ${selectedProfile.role}.`, photo: selectedProfile.profilePhoto || "" });
+          addAudit("Admin login", selectedProfile.adminId, `${selectedProfile.name} signed in as ${selectedProfile.role}.`);
         }}
       />
     );
@@ -1417,8 +1670,8 @@ const AdminPage = () => {
 
             <aside className="hidden min-h-0 overflow-y-auto border-l border-slate-200 bg-white p-5 xl:block">
               <div className="sticky top-0 bg-white pb-4">
-                <div className="text-sm font-black text-slate-950">Right Panel</div>
-                <div className="mt-1 text-xs font-semibold text-slate-500">Independent scroll area</div>
+                <div className="text-sm font-black text-slate-950">Activity Details</div>
+                <div className="mt-1 text-xs font-semibold text-slate-500">Latest selected record and action</div>
               </div>
 
               <div className="space-y-5">
@@ -1447,7 +1700,7 @@ const AdminPage = () => {
                   <div className="text-sm font-black text-slate-950">Operations Queue</div>
                   <div className="mt-3 space-y-2 text-sm font-bold text-slate-700">
                     <button onClick={() => openPage("documents")} className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100"><span>Pending verifications</span><span>{documentRows.filter(d => d.status === "Pending").length}</span></button>
-                    <button onClick={() => openPage("claims")} className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100"><span>Claims in review</span><span>{claimRows.filter(c => c.status === "Under Review").length}</span></button>
+                    <button onClick={() => openPage("claims")} className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100"><span>Pending claims</span><span>{claimRows.filter(c => !["Approved", "Rejected"].includes(c.status)).length}</span></button>
                     <button onClick={() => openPage("support")} className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100"><span>Open support chats</span><span>{supportChats.filter(s => s.status !== "Resolved").length}</span></button>
                     <button onClick={() => openPage("requirements")} className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100"><span>Quotes requested</span><span>{requirementRows.length}</span></button>
                   </div>
@@ -1460,7 +1713,7 @@ const AdminPage = () => {
                       ["Create plan", "policies"],
                       ["Send reminder", "notifications"],
                       ["Export claims", "reports"],
-                      ["Open audit logs", "settings"],
+                      ["Open audit logs", "audit"],
                     ].map(([label, page]) => (
                       <button key={label} onClick={() => openPage(page)} className="rounded-lg border border-slate-200 px-3 py-2 text-left text-xs font-black hover:bg-slate-50">{label}</button>
                     ))}

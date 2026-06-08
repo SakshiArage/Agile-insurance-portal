@@ -11,7 +11,7 @@ const DashboardDocuments = () => {
 
   const kycStatus = useMemo(() => {
     const has = purchases.some((p) => p.kyc?.filename);
-    return has ? "Verified (demo)" : "Pending (upload in checkout)";
+    return has ? "Verified" : "Pending upload";
   }, [purchases]);
 
   const upload = async (file) => {
@@ -71,7 +71,7 @@ const DashboardDocuments = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-sm font-black text-slate-900 dark:text-slate-100">Documents vault</div>
-              <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Uploaded files are stored locally in this frontend demo.</div>
+              <div className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Manage policy, KYC, and claim documents.</div>
             </div>
             <span className="w-fit rounded-full bg-blue-600/10 px-4 py-2 text-xs font-black text-blue-700 dark:text-blue-300">
               {allDocs.length} files
@@ -105,7 +105,7 @@ const DashboardDocuments = () => {
                     onClick={() =>
                       d.dataUrl
                         ? window.open(d.dataUrl, "_blank")
-                        : window.alert("Policy documents from purchases are generated demo records.")
+                        : window.alert("Policy document will be available after activation.")
                     }
                     className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 sm:w-auto"
                   >
@@ -130,7 +130,7 @@ const DashboardDocuments = () => {
                 AI document scanning
               </div>
               <div className="mt-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                Agile AI can scan documents for validity, readability, and mismatch risk (demo).
+                Document checks review validity, readability, and mismatch risk.
               </div>
             </div>
           </div>

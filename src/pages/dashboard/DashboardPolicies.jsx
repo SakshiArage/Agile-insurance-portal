@@ -150,7 +150,7 @@ const DashboardPolicies = () => {
 
                 <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <button
-                    onClick={() => window.alert("Policy download is mocked in this frontend-only demo.")}
+                    onClick={() => window.alert("Policy document is being prepared.")}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
                   >
                     <Download size={16} />

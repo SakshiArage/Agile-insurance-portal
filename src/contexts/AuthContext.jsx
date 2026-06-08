@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AuthContext } from "./authContextInstance";
 import { getToken, setToken } from "../utils/api";
 
@@ -52,11 +52,7 @@ const bootstrapUser = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => bootstrapUser());
-  const [bootstrapped, setBootstrapped] = useState(false);
-
-  useEffect(() => {
-    setBootstrapped(true);
-  }, []);
+  const [bootstrapped] = useState(true);
 
   const register = async ({ fullName, email, phone, password }) => {
     const users = readUsers();
