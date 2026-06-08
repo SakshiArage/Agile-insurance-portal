@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
+  ArrowLeft,
   BadgeCheck,
   BarChart3,
   Bell,
@@ -40,6 +41,7 @@ const STORAGE_SESSION = "agile_insurance_session_v1";
 const STORAGE_ADMINS = "agile_insurance_admins_v1";
 const STORAGE_SUPPORT_CHATS = "agile_insurance_support_chats_v1";
 const STORAGE_AUDIT_LOGS = "agile_insurance_audit_logs_v1";
+const STORAGE_SYSTEM_SETTINGS = "agile_insurance_system_settings_v1";
 
 const defaultAdminProfiles = [
   {
@@ -101,7 +103,7 @@ const navItems = [
   { id: "reports", label: "Reports & Analytics", icon: BarChart3, roles: ["Super Admin", "Insurance Manager"] },
   { id: "profile", label: "Admin Profile", icon: UserCog, roles: ["Super Admin", "Insurance Manager", "Claims Officer", "Support Executive"] },
   { id: "auditlog", label: "Audit Log", icon: ScrollText, roles: ["Super Admin", "Insurance Manager", "Claims Officer", "Support Executive"] },
-  { id: "settings", label: "Settings", icon: Settings, roles: ["Super Admin"] },
+  { id: "settings", label: "System Settings", icon: Settings, roles: ["Super Admin"] },
 ];
 
 const metrics = [
@@ -149,6 +151,144 @@ const documents = [
   { type: "Claim Documents", owner: "Sana Khan", status: "Verification" },
 ];
 
+const adminSettingCards = [
+  { id: "general", title: "General Setting", description: "Configure the fundamental information of the site.", icon: Settings },
+  { id: "branding", title: "Logo and Favicon", description: "Upload your logo and favicon here.", icon: LayoutDashboard },
+  { id: "configuration", title: "System Configuration", description: "Control all of the basic modules of the system.", icon: UserCog },
+  { id: "notifications", title: "Notification Setting", description: "Control and configure overall notification elements of the system.", icon: Bell },
+  { id: "payment", title: "Payment Gateways", description: "Configure automatic or manual payment gateways to accept payment from users.", icon: CreditCard },
+  { id: "withdrawals", title: "Withdrawals Methods", description: "Set up manual withdrawal methods for payout requests.", icon: KeyRound },
+  { id: "forms", title: "Policy Forms", description: "Generate forms for different policies.", icon: ClipboardCheck },
+  { id: "features", title: "Manage Features", description: "Generate features for different plans.", icon: Edit3 },
+  { id: "regulations", title: "Policy Regulations", description: "Define what will and will not be covered in plans.", icon: AlertTriangle },
+  { id: "seo", title: "SEO Configuration", description: "Configure meta title, description, and keywords.", icon: LineChart },
+  { id: "frontend", title: "Manage Frontend", description: "Control all frontend contents of the system.", icon: Smartphone },
+  { id: "pages", title: "Manage Pages", description: "Control dynamic and static pages of the system.", icon: FileText },
+  { id: "kyc", title: "KYC Setting", description: "Configure client information fields.", icon: ShieldCheck },
+  { id: "social", title: "Social Login Setting", description: "Provide required social login information.", icon: Users },
+  { id: "language", title: "Language", description: "Configure languages and keywords to localize the system.", icon: MessageSquare },
+  { id: "extensions", title: "Extensions", description: "Manage extensions of the system.", icon: Plus },
+  { id: "policyPages", title: "Policy Pages", description: "Configure policy and terms of the system.", icon: Lock },
+  { id: "maintenance", title: "Maintenance Mode", description: "Enable or disable maintenance mode when required.", icon: Settings },
+  { id: "cookie", title: "GDPR Cookie", description: "Set GDPR cookie policy for visitors.", icon: CheckCircle2 },
+  { id: "css", title: "Custom CSS", description: "Write custom CSS for frontend styles.", icon: FileText },
+  { id: "sitemap", title: "Sitemap XML", description: "Insert sitemap XML to enhance SEO performance.", icon: LayoutDashboard },
+  { id: "robots", title: "Robots txt", description: "Insert robots.txt content for web crawlers.", icon: FileText },
+];
+
+const settingFieldGroups = {
+  general: [
+    { name: "companyName", label: "Company Name", type: "text", defaultValue: "Agile Insurance" },
+    { name: "supportEmail", label: "Support Email", type: "text", defaultValue: "support@agileinsure.in" },
+    { name: "supportPhone", label: "Support Phone", type: "text", defaultValue: "+91 98765 43210" },
+    { name: "serviceTaxRate", label: "Service Tax Rate (%)", type: "number", defaultValue: 18 },
+  ],
+  branding: [
+    { name: "logo", label: "Logo", type: "file", accept: "image/*", defaultValue: "" },
+    { name: "favicon", label: "Favicon", type: "file", accept: "image/*", defaultValue: "" },
+    { name: "brandColor", label: "Brand Color", type: "color", defaultValue: "#2563eb" },
+  ],
+  configuration: [
+    { name: "claimsModule", label: "Claims Module", type: "boolean", defaultValue: true },
+    { name: "paymentsModule", label: "Payments Module", type: "boolean", defaultValue: true },
+    { name: "documentsModule", label: "Document Vault", type: "boolean", defaultValue: true },
+    { name: "supportModule", label: "Support Center", type: "boolean", defaultValue: true },
+  ],
+  notifications: [
+    { name: "emailEnabled", label: "Email Notifications", type: "boolean", defaultValue: true },
+    { name: "smsEnabled", label: "SMS Notifications", type: "boolean", defaultValue: true },
+    { name: "pushEnabled", label: "Push Notifications", type: "boolean", defaultValue: false },
+    { name: "renewalReminderDays", label: "Renewal Reminder Days", type: "number", defaultValue: 15 },
+  ],
+  payment: [
+    { name: "razorpay", label: "Razorpay Gateway", type: "boolean", defaultValue: true },
+    { name: "upi", label: "UPI Payments", type: "boolean", defaultValue: true },
+    { name: "cards", label: "Card Payments", type: "boolean", defaultValue: true },
+    { name: "minimumPayment", label: "Minimum Payment", type: "number", defaultValue: 500 },
+  ],
+  withdrawals: [
+    { name: "bankTransfer", label: "Bank Transfer", type: "boolean", defaultValue: true },
+    { name: "upiPayout", label: "UPI Payout", type: "boolean", defaultValue: true },
+    { name: "minimumWithdrawal", label: "Minimum Withdrawal", type: "number", defaultValue: 1000 },
+    { name: "payoutNote", label: "Payout Instructions", type: "textarea", defaultValue: "Verify bank details before approving payouts." },
+  ],
+  forms: [
+    { name: "healthForm", label: "Health Policy Form", type: "boolean", defaultValue: true },
+    { name: "motorForm", label: "Motor Policy Form", type: "boolean", defaultValue: true },
+    { name: "lifeForm", label: "Life Policy Form", type: "boolean", defaultValue: true },
+    { name: "requiredFields", label: "Required Fields", type: "textarea", defaultValue: "Full name, phone, email, policy type, ID proof" },
+  ],
+  features: [
+    { name: "aiAssistant", label: "AI Assistant", type: "boolean", defaultValue: true },
+    { name: "policyCompare", label: "Policy Compare", type: "boolean", defaultValue: true },
+    { name: "claimTracking", label: "Claim Tracking", type: "boolean", defaultValue: true },
+    { name: "voiceSupport", label: "Voice Support", type: "boolean", defaultValue: false },
+  ],
+  regulations: [
+    { name: "coveredItems", label: "Covered Items", type: "textarea", defaultValue: "Hospitalization, accident damage, policy benefits, verified expenses" },
+    { name: "excludedItems", label: "Excluded Items", type: "textarea", defaultValue: "Fraudulent claims, expired policies, missing documents" },
+    { name: "highValueReviewAmount", label: "High Value Review Amount", type: "number", defaultValue: 100000 },
+  ],
+  seo: [
+    { name: "metaTitle", label: "Meta Title", type: "text", defaultValue: "Agile Insurance Portal" },
+    { name: "metaDescription", label: "Meta Description", type: "textarea", defaultValue: "Compare, buy, and manage insurance policies online." },
+    { name: "keywords", label: "Meta Keywords", type: "textarea", defaultValue: "insurance, claims, policy, health insurance, car insurance" },
+  ],
+  frontend: [
+    { name: "heroTitle", label: "Home Hero Title", type: "text", defaultValue: "Smart Insurance for Every Need" },
+    { name: "primaryCta", label: "Primary CTA", type: "text", defaultValue: "Explore Policies" },
+    { name: "showTestimonials", label: "Show Testimonials", type: "boolean", defaultValue: true },
+  ],
+  pages: [
+    { name: "aboutPage", label: "About Page", type: "boolean", defaultValue: true },
+    { name: "contactPage", label: "Contact Page", type: "boolean", defaultValue: true },
+    { name: "articlesPage", label: "Articles Page", type: "boolean", defaultValue: true },
+    { name: "pageNotice", label: "Page Notice", type: "textarea", defaultValue: "Static pages are managed by the admin team." },
+  ],
+  kyc: [
+    { name: "aadhaarRequired", label: "Aadhaar Required", type: "boolean", defaultValue: true },
+    { name: "panRequired", label: "PAN Required", type: "boolean", defaultValue: true },
+    { name: "selfieRequired", label: "Selfie Required", type: "boolean", defaultValue: false },
+    { name: "autoRejectIncomplete", label: "Auto Reject Incomplete KYC", type: "boolean", defaultValue: false },
+  ],
+  social: [
+    { name: "googleLogin", label: "Google Login", type: "boolean", defaultValue: true },
+    { name: "facebookLogin", label: "Facebook Login", type: "boolean", defaultValue: false },
+    { name: "clientId", label: "OAuth Client ID", type: "text", defaultValue: "" },
+  ],
+  language: [
+    { name: "defaultLanguage", label: "Default Language", type: "select", defaultValue: "English", options: ["English", "Hindi", "Tamil", "Bengali"] },
+    { name: "multiLanguage", label: "Enable Multi Language", type: "boolean", defaultValue: false },
+    { name: "customLabels", label: "Custom Labels", type: "textarea", defaultValue: "claim=Claim\npolicy=Policy\nsupport=Support" },
+  ],
+  extensions: [
+    { name: "analytics", label: "Analytics Extension", type: "boolean", defaultValue: true },
+    { name: "chatbot", label: "Chatbot Extension", type: "boolean", defaultValue: true },
+    { name: "documentScanner", label: "Document Scanner", type: "boolean", defaultValue: false },
+  ],
+  policyPages: [
+    { name: "terms", label: "Terms and Conditions", type: "textarea", defaultValue: "Policy terms are subject to verification and approval." },
+    { name: "privacy", label: "Privacy Policy", type: "textarea", defaultValue: "Customer data is stored securely for insurance operations." },
+  ],
+  maintenance: [
+    { name: "enabled", label: "Maintenance Mode", type: "boolean", defaultValue: false },
+    { name: "message", label: "Maintenance Message", type: "textarea", defaultValue: "The portal is temporarily under maintenance. Please check back soon." },
+  ],
+  cookie: [
+    { name: "enabled", label: "GDPR Cookie Banner", type: "boolean", defaultValue: true },
+    { name: "message", label: "Cookie Message", type: "textarea", defaultValue: "We use cookies to improve your insurance portal experience." },
+  ],
+  css: [
+    { name: "customCss", label: "Custom CSS", type: "textarea", defaultValue: "body { scroll-behavior: smooth; }" },
+  ],
+  sitemap: [
+    { name: "xml", label: "Sitemap XML", type: "textarea", defaultValue: "<urlset><url><loc>https://agileinsure.in/</loc></url></urlset>" },
+  ],
+  robots: [
+    { name: "content", label: "Robots.txt Content", type: "textarea", defaultValue: "User-agent: *\nAllow: /\nSitemap: https://agileinsure.in/sitemap.xml" },
+  ],
+};
+
 const policyPlans = [
   { name: "Health Secure Plus", type: "Health", coverage: "INR 25L", premium: "INR 1,850/mo", duration: "1 year", state: "Active" },
   { name: "Drive Shield Elite", type: "Motor", coverage: "IDV based", premium: "INR 9,600/yr", duration: "1 year", state: "Active" },
@@ -170,7 +310,8 @@ const pageTitles = {
   reports: "Reports & Analytics",
   profile: "Admin Profile",
   auditlog: "Audit Log",
-  settings: "Admin Settings",
+  settings: "System Settings",
+  "setting-detail": "System Setting",
 };
 
 const safeJsonParse = (value, fallback) => {
@@ -206,6 +347,15 @@ const loadAuditLogs = () => {
 
 const saveAuditLogs = (logs) => {
   localStorage.setItem(STORAGE_AUDIT_LOGS, JSON.stringify(logs));
+};
+
+const readSystemSettings = () => {
+  const saved = safeJsonParse(localStorage.getItem(STORAGE_SYSTEM_SETTINGS), null);
+  return saved && typeof saved === "object" ? { modules: {}, ...saved } : { modules: {} };
+};
+
+const saveSystemSettings = (settings) => {
+  localStorage.setItem(STORAGE_SYSTEM_SETTINGS, JSON.stringify(settings));
 };
 
 const readRealUsers = () => {
@@ -601,6 +751,8 @@ const AdminPage = () => {
   const [documentRows, setDocumentRows] = useState(documents);
   const [planRows, setPlanRows] = useState(policyPlans);
   const [auditLogs, setAuditLogs] = useState(() => loadAuditLogs());
+  const [systemSettings, setSystemSettings] = useState(readSystemSettings);
+  const [selectedSettingId, setSelectedSettingId] = useState("general");
   const [showAdminProfilePassword, setShowAdminProfilePassword] = useState(false);
   // FIX 4: adminNameDraft should use selectedProfile, not loadAdmins() which returns array
   const [adminNameDraft, setAdminNameDraft] = useState(() => loadAdmins()[0]?.name || "");
@@ -850,6 +1002,120 @@ const AdminPage = () => {
       reason,
       responseToUser: "Your claim was rejected because required details are missing. Please resubmit with complete documents.",
     });
+  };
+
+  const getSettingValue = (settingId, field) => {
+    const saved = systemSettings.modules?.[settingId]?.[field.name];
+    return saved ?? field.defaultValue ?? "";
+  };
+
+  const updateSettingModule = (settingId, field, value) => {
+    setSystemSettings((settings) => {
+      const next = {
+        ...settings,
+        modules: {
+          ...(settings.modules || {}),
+          [settingId]: {
+            ...(settings.modules?.[settingId] || {}),
+            [field.name]: value,
+          },
+        },
+      };
+      saveSystemSettings(next);
+      return next;
+    });
+    addAuditLogEntry(`/api/v4/settings/update -> ${settingId}.${field.name}`);
+    runAction("Setting applied", `${field.label} updated in real time.`);
+  };
+
+  const updateSettingFile = (settingId, field, file) => {
+    if (!file) return;
+    fileToDataUrl(file, (dataUrl) => updateSettingModule(settingId, field, dataUrl));
+  };
+
+  const openSettingDetail = (settingId) => {
+    const card = adminSettingCards.find((item) => item.id === settingId) || adminSettingCards[0];
+    setSelectedSettingId(card.id);
+    setActivePage("setting-detail");
+    setDetail({ title: card.title, body: card.description, photo: "" });
+  };
+
+  const renderSettingField = (settingId, field) => {
+    const value = getSettingValue(settingId, field);
+
+    if (field.type === "boolean") {
+      return (
+        <label key={field.name} className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+          <span>
+            <span className="block text-sm font-black text-slate-800">{field.label}</span>
+            <span className="mt-1 block text-xs font-semibold text-slate-500">{value ? "Enabled" : "Disabled"}</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(event) => updateSettingModule(settingId, field, event.target.checked)}
+            className="h-5 w-5 cursor-pointer rounded border-slate-300"
+          />
+        </label>
+      );
+    }
+
+    if (field.type === "textarea") {
+      return (
+        <label key={field.name} className="block rounded-lg border border-slate-200 bg-white p-4">
+          <span className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</span>
+          <textarea
+            value={value}
+            onChange={(event) => updateSettingModule(settingId, field, event.target.value)}
+            className="mt-2 min-h-32 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold outline-none focus:border-blue-500"
+          />
+        </label>
+      );
+    }
+
+    if (field.type === "select") {
+      return (
+        <label key={field.name} className="block rounded-lg border border-slate-200 bg-white p-4">
+          <span className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</span>
+          <select
+            value={value}
+            onChange={(event) => updateSettingModule(settingId, field, event.target.value)}
+            className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none focus:border-blue-500"
+          >
+            {field.options.map((option) => <option key={option}>{option}</option>)}
+          </select>
+        </label>
+      );
+    }
+
+    if (field.type === "file") {
+      return (
+        <div key={field.name} className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</div>
+          {value ? (
+            <img src={value} alt={field.label} className="mt-3 h-20 w-20 rounded-lg border border-slate-200 object-contain" />
+          ) : (
+            <div className="mt-3 grid h-20 w-20 place-items-center rounded-lg border border-dashed border-slate-300 text-xs font-bold text-slate-400">No file</div>
+          )}
+          <label className="mt-3 inline-flex cursor-pointer items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white hover:bg-blue-700">
+            Upload
+            <input type="file" accept={field.accept} className="hidden" onChange={(event) => updateSettingFile(settingId, field, event.target.files?.[0])} />
+          </label>
+        </div>
+      );
+    }
+
+    return (
+      <label key={field.name} className="block rounded-lg border border-slate-200 bg-white p-4">
+        <span className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</span>
+        <input
+          type={field.type}
+          value={value}
+          onChange={(event) => updateSettingModule(settingId, field, field.type === "number" ? Number(event.target.value) : event.target.value)}
+          className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none focus:border-blue-500"
+        />
+      </label>
+    );
   };
 
   const actionButtons = (target, kind) => (
@@ -1453,69 +1719,60 @@ const AdminPage = () => {
         </section>
       );
     }
+    if (activePage === "setting-detail") {
+      const card = adminSettingCards.find((item) => item.id === selectedSettingId) || adminSettingCards[0];
+      const Icon = card.icon;
+      const fields = settingFieldGroups[card.id] || [];
+
+      return (
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <SectionTitle
+            icon={Icon}
+            title={card.title}
+            action={
+              <button onClick={() => openPage("settings")} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 hover:bg-slate-50">
+                <ArrowLeft size={16} />
+                Back to Settings
+              </button>
+            }
+          />
+          <div className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm font-bold leading-6 text-blue-800">
+            {card.description} Changes save instantly and are stored for this admin portal.
+          </div>
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            {fields.map((field) => renderSettingField(card.id, field))}
+          </div>
+        </section>
+      );
+    }
     if (activePage === "settings") {
       return (
-        <section className="space-y-6">
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <SectionTitle icon={Settings} title="Admin Settings" />
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {["Role Permissions", "Two-Factor Rules", "Audit Logs", "System Operations"].map((setting) => (
-                <button key={setting} onClick={() => runAction("Setting opened", setting)} className="rounded-lg border border-slate-200 p-4 text-left font-black hover:bg-slate-50">{setting}</button>
-              ))}
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <SectionTitle icon={Settings} title="System Settings" />
+          <div className="mt-5">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-11 pr-4 text-sm font-semibold outline-none focus:border-blue-500" placeholder="Search settings..." />
             </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-base font-black text-slate-950">Security Audit Logs</h3>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">Immutable structural tracking history of recent ecosystem mutations</p>
-              </div>
-              <button 
-                onClick={() => {
-                  localStorage.removeItem(STORAGE_AUDIT_LOGS);
-                  setAuditLogs(defaultAuditLogs);
-                }} 
-                className="text-xs font-black text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg border border-slate-200 transition"
-              >
-                Reset Trail logs
-              </button>
-            </div>
-
-            <div className="mt-5 overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full min-w-[700px] text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-black">Action Event</th>
-                    <th className="px-4 py-3 font-black">Operator User</th>
-                    <th className="px-4 py-3 font-black">Timestamp Execution</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3.5 font-mono text-xs font-semibold text-blue-900">{log.action}</td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-slate-900 text-[10px] font-black text-white">
-                            {log.initials}
-                          </span>
-                          <span className="font-semibold text-slate-700 text-xs">{log.username}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-xs font-bold text-slate-500">
-                        {new Date(log.createdAt).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit"
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+              {adminSettingCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <button
+                    key={card.id}
+                    onClick={() => openSettingDetail(card.id)}
+                    className="group flex min-h-24 items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                  >
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-blue-600 text-white transition group-hover:bg-blue-700">
+                      <Icon size={25} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-base font-black text-slate-900">{card.title}</span>
+                      <span className="mt-1 block text-sm font-semibold leading-5 text-slate-500">{card.description}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
