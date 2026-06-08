@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
-import { whyChooseFeatures } from "../components/ChoiceUS";
+import { whyChooseFeatures } from "../data/whyChooseFeatures";
 
 const detailCopy = {
   "ai-fraud-detection": {

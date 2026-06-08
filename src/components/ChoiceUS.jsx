@@ -1,19 +1,11 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
+import { whyChooseFeatures } from "../data/whyChooseFeatures";
 
 import "swiper/css";
 
 // Update feature titles, descriptions, and icons here to change the "Why Choose Us" carousel.
-export const whyChooseFeatures = [
-  { id: 1, slug: "ai-fraud-detection", title: "AI Fraud Detection", desc: "Detect suspicious claims instantly using advanced AI verification systems.", icon: "🛡️" },
-  { id: 2, slug: "customer-support", title: "24/7 Customer Support", desc: "Real-time human + AI support anytime from anywhere.", icon: "💬" },
-  { id: 3, slug: "fast-claim-processing", title: "Fast Claim Processing", desc: "Verification and processing completed within minutes.", icon: "⚡" },
-  { id: 4, slug: "smart-policy-tracking", title: "Smart Policy Tracking", desc: "Track and manage all policies from one dashboard.", icon: "📄" },
-  { id: 5, slug: "advanced-security", title: "Advanced Security", desc: "Military-grade encryption for secure insurance management.", icon: "🔒" },
-  { id: 6, slug: "ai-voice-assistant", title: "AI Voice Assistant", desc: "Smart multilingual voice support for quick assistance.", icon: "🎙️" },
-];
-
 const InsuranceSlider = () => {
   const navigate = useNavigate();
 

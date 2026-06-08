@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -169,6 +169,119 @@ const adminSettingCards = [
   { id: "robots", title: "Robots txt", description: "Insert robots.txt content for web crawlers.", icon: FileText },
 ];
 
+const settingFieldGroups = {
+  general: [
+    { name: "companyName", label: "Company Name", type: "text", defaultValue: "Agile Insurance" },
+    { name: "supportEmail", label: "Support Email", type: "text", defaultValue: "support@agileinsure.in" },
+    { name: "supportPhone", label: "Support Phone", type: "text", defaultValue: "+91 98765 43210" },
+    { name: "serviceTaxRate", label: "Service Tax Rate (%)", type: "number", defaultValue: 18 },
+  ],
+  branding: [
+    { name: "logo", label: "Logo", type: "file", accept: "image/*", defaultValue: "" },
+    { name: "favicon", label: "Favicon", type: "file", accept: "image/*", defaultValue: "" },
+    { name: "brandColor", label: "Brand Color", type: "color", defaultValue: "#2563eb" },
+  ],
+  configuration: [
+    { name: "claimsModule", label: "Claims Module", type: "boolean", defaultValue: true },
+    { name: "paymentsModule", label: "Payments Module", type: "boolean", defaultValue: true },
+    { name: "documentsModule", label: "Document Vault", type: "boolean", defaultValue: true },
+    { name: "supportModule", label: "Support Center", type: "boolean", defaultValue: true },
+  ],
+  notifications: [
+    { name: "emailEnabled", label: "Email Notifications", type: "boolean", defaultValue: true },
+    { name: "smsEnabled", label: "SMS Notifications", type: "boolean", defaultValue: true },
+    { name: "pushEnabled", label: "Push Notifications", type: "boolean", defaultValue: false },
+    { name: "renewalReminderDays", label: "Renewal Reminder Days", type: "number", defaultValue: 15 },
+  ],
+  payment: [
+    { name: "razorpay", label: "Razorpay Gateway", type: "boolean", defaultValue: true },
+    { name: "upi", label: "UPI Payments", type: "boolean", defaultValue: true },
+    { name: "cards", label: "Card Payments", type: "boolean", defaultValue: true },
+    { name: "minimumPayment", label: "Minimum Payment", type: "number", defaultValue: 500 },
+  ],
+  withdrawals: [
+    { name: "bankTransfer", label: "Bank Transfer", type: "boolean", defaultValue: true },
+    { name: "upiPayout", label: "UPI Payout", type: "boolean", defaultValue: true },
+    { name: "minimumWithdrawal", label: "Minimum Withdrawal", type: "number", defaultValue: 1000 },
+    { name: "payoutNote", label: "Payout Instructions", type: "textarea", defaultValue: "Verify bank details before approving payouts." },
+  ],
+  forms: [
+    { name: "healthForm", label: "Health Policy Form", type: "boolean", defaultValue: true },
+    { name: "motorForm", label: "Motor Policy Form", type: "boolean", defaultValue: true },
+    { name: "lifeForm", label: "Life Policy Form", type: "boolean", defaultValue: true },
+    { name: "requiredFields", label: "Required Fields", type: "textarea", defaultValue: "Full name, phone, email, policy type, ID proof" },
+  ],
+  features: [
+    { name: "aiAssistant", label: "AI Assistant", type: "boolean", defaultValue: true },
+    { name: "policyCompare", label: "Policy Compare", type: "boolean", defaultValue: true },
+    { name: "claimTracking", label: "Claim Tracking", type: "boolean", defaultValue: true },
+    { name: "voiceSupport", label: "Voice Support", type: "boolean", defaultValue: false },
+  ],
+  regulations: [
+    { name: "coveredItems", label: "Covered Items", type: "textarea", defaultValue: "Hospitalization, accident damage, policy benefits, verified expenses" },
+    { name: "excludedItems", label: "Excluded Items", type: "textarea", defaultValue: "Fraudulent claims, expired policies, missing documents" },
+    { name: "highValueReviewAmount", label: "High Value Review Amount", type: "number", defaultValue: 100000 },
+  ],
+  seo: [
+    { name: "metaTitle", label: "Meta Title", type: "text", defaultValue: "Agile Insurance Portal" },
+    { name: "metaDescription", label: "Meta Description", type: "textarea", defaultValue: "Compare, buy, and manage insurance policies online." },
+    { name: "keywords", label: "Meta Keywords", type: "textarea", defaultValue: "insurance, claims, policy, health insurance, car insurance" },
+  ],
+  frontend: [
+    { name: "heroTitle", label: "Home Hero Title", type: "text", defaultValue: "Smart Insurance for Every Need" },
+    { name: "primaryCta", label: "Primary CTA", type: "text", defaultValue: "Explore Policies" },
+    { name: "showTestimonials", label: "Show Testimonials", type: "boolean", defaultValue: true },
+  ],
+  pages: [
+    { name: "aboutPage", label: "About Page", type: "boolean", defaultValue: true },
+    { name: "contactPage", label: "Contact Page", type: "boolean", defaultValue: true },
+    { name: "articlesPage", label: "Articles Page", type: "boolean", defaultValue: true },
+    { name: "pageNotice", label: "Page Notice", type: "textarea", defaultValue: "Static pages are managed by the admin team." },
+  ],
+  kyc: [
+    { name: "aadhaarRequired", label: "Aadhaar Required", type: "boolean", defaultValue: true },
+    { name: "panRequired", label: "PAN Required", type: "boolean", defaultValue: true },
+    { name: "selfieRequired", label: "Selfie Required", type: "boolean", defaultValue: false },
+    { name: "autoRejectIncomplete", label: "Auto Reject Incomplete KYC", type: "boolean", defaultValue: false },
+  ],
+  social: [
+    { name: "googleLogin", label: "Google Login", type: "boolean", defaultValue: true },
+    { name: "facebookLogin", label: "Facebook Login", type: "boolean", defaultValue: false },
+    { name: "clientId", label: "OAuth Client ID", type: "text", defaultValue: "" },
+  ],
+  language: [
+    { name: "defaultLanguage", label: "Default Language", type: "select", defaultValue: "English", options: ["English", "Hindi", "Tamil", "Bengali"] },
+    { name: "multiLanguage", label: "Enable Multi Language", type: "boolean", defaultValue: false },
+    { name: "customLabels", label: "Custom Labels", type: "textarea", defaultValue: "claim=Claim\npolicy=Policy\nsupport=Support" },
+  ],
+  extensions: [
+    { name: "analytics", label: "Analytics Extension", type: "boolean", defaultValue: true },
+    { name: "chatbot", label: "Chatbot Extension", type: "boolean", defaultValue: true },
+    { name: "documentScanner", label: "Document Scanner", type: "boolean", defaultValue: false },
+  ],
+  policyPages: [
+    { name: "terms", label: "Terms and Conditions", type: "textarea", defaultValue: "Policy terms are subject to verification and approval." },
+    { name: "privacy", label: "Privacy Policy", type: "textarea", defaultValue: "Customer data is stored securely for insurance operations." },
+  ],
+  maintenance: [
+    { name: "enabled", label: "Maintenance Mode", type: "boolean", defaultValue: false },
+    { name: "message", label: "Maintenance Message", type: "textarea", defaultValue: "The portal is temporarily under maintenance. Please check back soon." },
+  ],
+  cookie: [
+    { name: "enabled", label: "GDPR Cookie Banner", type: "boolean", defaultValue: true },
+    { name: "message", label: "Cookie Message", type: "textarea", defaultValue: "We use cookies to improve your insurance portal experience." },
+  ],
+  css: [
+    { name: "customCss", label: "Custom CSS", type: "textarea", defaultValue: "body { scroll-behavior: smooth; }" },
+  ],
+  sitemap: [
+    { name: "xml", label: "Sitemap XML", type: "textarea", defaultValue: "<urlset><url><loc>https://agileinsure.in/</loc></url></urlset>" },
+  ],
+  robots: [
+    { name: "content", label: "Robots.txt Content", type: "textarea", defaultValue: "User-agent: *\nAllow: /\nSitemap: https://agileinsure.in/sitemap.xml" },
+  ],
+};
+
 const reportTemplates = [
   { id: "claims-report", title: "Claims Report", category: "Claims", owner: "Claims Office", status: "Ready", pages: 7 },
   { id: "revenue-report", title: "Revenue Report", category: "Finance", owner: "Accounts", status: "Ready", pages: 5 },
@@ -200,6 +313,7 @@ const pageTitles = {
   profile: "Admin Profile",
   settings: "System Settings",
   editor: "Markup Editor",
+  "setting-detail": "System Setting",
 };
 
 const safeJsonParse = (value, fallback) => {
@@ -710,6 +824,7 @@ const AdminPage = () => {
   const [adminReply, setAdminReply] = useState("");
   const [auditLogs, setAuditLogs] = useState(readAuditLogs);
   const [systemSettings, setSystemSettings] = useState(readSystemSettings);
+  const [selectedSettingId, setSelectedSettingId] = useState("general");
   const [editorTarget, setEditorTarget] = useState(null);
   const [editorTool, setEditorTool] = useState("pen");
   const [editorColor, setEditorColor] = useState("#dc2626");
@@ -736,6 +851,18 @@ const AdminPage = () => {
       }),
     [activeUsers, claimRows, customerRows.length, planRows, supportChats],
   );
+
+  useEffect(() => {
+    const cssValue = systemSettings.modules?.css?.customCss || "";
+    const styleId = "agile-admin-custom-css";
+    let styleTag = document.getElementById(styleId);
+    if (!styleTag && cssValue) {
+      styleTag = document.createElement("style");
+      styleTag.id = styleId;
+      document.head.appendChild(styleTag);
+    }
+    if (styleTag) styleTag.textContent = cssValue;
+  }, [systemSettings.modules?.css?.customCss]);
 
   const allowedNav = useMemo(
     () => navItems.filter((item) => item.roles.includes(selectedProfile.role)),
@@ -1074,26 +1201,124 @@ const AdminPage = () => {
     return true;
   });
 
-  const updateSystemSetting = (group, key, value) => {
+  const getSettingValue = (settingId, field) => {
+    const saved = systemSettings.modules?.[settingId]?.[field.name];
+    return saved ?? field.defaultValue ?? "";
+  };
+
+  const updateSettingModule = (settingId, field, value) => {
     setSystemSettings((settings) => {
       const next = {
         ...settings,
-        [group]: {
-          ...settings[group],
-          [key]: value,
+        modules: {
+          ...(settings.modules || {}),
+          [settingId]: {
+            ...(settings.modules?.[settingId] || {}),
+            [field.name]: value,
+          },
         },
       };
       saveSystemSettings(next);
       return next;
     });
-    addAudit("System setting updated", `${group}.${key}`, String(value));
-    runAction("Setting saved", `${group}.${key} updated to ${String(value)}.`);
+    addAudit("System setting updated", `${settingId}.${field.name}`, String(value).slice(0, 240));
+    runAction("Setting applied", `${field.label} updated in real time.`);
+  };
+
+  const updateSettingFile = (settingId, field, file) => {
+    if (!file) return;
+    fileToDataUrl(file, (dataUrl) => updateSettingModule(settingId, field, dataUrl));
+  };
+
+  const openSettingDetail = (settingId) => {
+    const card = adminSettingCards.find((item) => item.id === settingId) || adminSettingCards[0];
+    setSelectedSettingId(card.id);
+    setActivePage("setting-detail");
+    setDetail({ title: card.title, body: card.description, photo: "" });
   };
 
   const clearAuditLogs = () => {
     setAuditLogs([]);
     saveAuditLogs([]);
     runAction("Audit logs cleared", `${selectedProfile.name} cleared the local audit log view.`);
+  };
+
+  const renderSettingField = (settingId, field) => {
+    const value = getSettingValue(settingId, field);
+
+    if (field.type === "boolean") {
+      return (
+        <label key={field.name} className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+          <span>
+            <span className="block text-sm font-black text-slate-800">{field.label}</span>
+            <span className="mt-1 block text-xs font-semibold text-slate-500">{value ? "Enabled" : "Disabled"}</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(event) => updateSettingModule(settingId, field, event.target.checked)}
+            className="h-5 w-5 cursor-pointer rounded border-slate-300"
+          />
+        </label>
+      );
+    }
+
+    if (field.type === "textarea") {
+      return (
+        <label key={field.name} className="block rounded-lg border border-slate-200 bg-white p-4">
+          <span className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</span>
+          <textarea
+            value={value}
+            onChange={(event) => updateSettingModule(settingId, field, event.target.value)}
+            className="mt-2 min-h-32 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold outline-none focus:border-blue-500"
+          />
+        </label>
+      );
+    }
+
+    if (field.type === "select") {
+      return (
+        <label key={field.name} className="block rounded-lg border border-slate-200 bg-white p-4">
+          <span className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</span>
+          <select
+            value={value}
+            onChange={(event) => updateSettingModule(settingId, field, event.target.value)}
+            className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none focus:border-blue-500"
+          >
+            {field.options.map((option) => <option key={option}>{option}</option>)}
+          </select>
+        </label>
+      );
+    }
+
+    if (field.type === "file") {
+      return (
+        <div key={field.name} className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</div>
+          {value ? (
+            <img src={value} alt={field.label} className="mt-3 h-20 w-20 rounded-lg border border-slate-200 object-contain" />
+          ) : (
+            <div className="mt-3 grid h-20 w-20 place-items-center rounded-lg border border-dashed border-slate-300 text-xs font-bold text-slate-400">No file</div>
+          )}
+          <label className="mt-3 inline-flex cursor-pointer items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white hover:bg-blue-700">
+            Upload
+            <input type="file" accept={field.accept} className="hidden" onChange={(event) => updateSettingFile(settingId, field, event.target.files?.[0])} />
+          </label>
+        </div>
+      );
+    }
+
+    return (
+      <label key={field.name} className="block rounded-lg border border-slate-200 bg-white p-4">
+        <span className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</span>
+        <input
+          type={field.type}
+          value={value}
+          onChange={(event) => updateSettingModule(settingId, field, field.type === "number" ? Number(event.target.value) : event.target.value)}
+          className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none focus:border-blue-500"
+        />
+      </label>
+    );
   };
 
   const renderDashboard = () => (
@@ -1778,6 +2003,32 @@ const AdminPage = () => {
         </section>
       );
     }
+    if (activePage === "setting-detail") {
+      const card = adminSettingCards.find((item) => item.id === selectedSettingId) || adminSettingCards[0];
+      const Icon = card.icon;
+      const fields = settingFieldGroups[card.id] || [];
+
+      return (
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <SectionTitle
+            icon={Icon}
+            title={card.title}
+            action={
+              <button onClick={() => openPage("settings")} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 hover:bg-slate-50">
+                <ArrowLeft size={16} />
+                Back to Settings
+              </button>
+            }
+          />
+          <div className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm font-bold leading-6 text-blue-800">
+            {card.description} Changes save instantly and are stored for this admin portal.
+          </div>
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            {fields.map((field) => renderSettingField(card.id, field))}
+          </div>
+        </section>
+      );
+    }
     return (
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <SectionTitle icon={Settings} title="System Settings" />
@@ -1792,7 +2043,7 @@ const AdminPage = () => {
               return (
                 <button
                   key={card.id}
-                  onClick={() => runAction(card.title, card.description)}
+                  onClick={() => openSettingDetail(card.id)}
                   className="group flex min-h-24 items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                 >
                   <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-blue-600 text-white transition group-hover:bg-blue-700">
@@ -1806,43 +2057,6 @@ const AdminPage = () => {
               );
             })}
           </div>
-        </div>
-
-        <div className="mt-8 grid gap-5 xl:grid-cols-2">
-          {Object.entries(systemSettings).map(([group, values]) => (
-            <div key={group} className="rounded-lg border border-slate-200 p-5">
-              <div className="text-sm font-black capitalize text-slate-950">{group} Settings</div>
-              <div className="mt-4 space-y-4">
-                {Object.entries(values).map(([key, value]) => {
-                  const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
-                  if (typeof value === "boolean") {
-                    return (
-                      <label key={key} className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 px-4 py-3">
-                        <span className="text-sm font-bold text-slate-700">{label}</span>
-                        <input
-                          type="checkbox"
-                          checked={value}
-                          onChange={(event) => updateSystemSetting(group, key, event.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300"
-                        />
-                      </label>
-                    );
-                  }
-                  return (
-                    <label key={key} className="block">
-                      <span className="text-xs font-black uppercase tracking-wide text-slate-500">{label}</span>
-                      <input
-                        className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none focus:border-blue-500"
-                        type={typeof value === "number" ? "number" : "text"}
-                        value={value}
-                        onChange={(event) => updateSystemSetting(group, key, typeof value === "number" ? Number(event.target.value) : event.target.value)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
     );
