@@ -4,15 +4,18 @@ const Payment = require("../Models/payment.model");
 const KycRequest = require("../Models/kycRequest.model");
 const catchAsync = require("../Utils/catchAsync");
 const userModel = require("../Models/userModel.model");
+const SupportTicket = require("../Models/contact.model");
 
 const getDashboard = catchAsync(async (req, res) => {
-  const [activePolicies, upcomingPremiums, claimStatus, paymentHistory, kycRequests, userModel] = await Promise.all([
+  const [activePolicies, upcomingPremiums, claimStatus, paymentHistory, kycRequests, userModel, supportTickets] = await Promise.all([
     Policy.find({ user: req.user._id, status: "active" }).sort({ createdAt: -1 }).limit(6),
     Payment.find({ user: req.user._id, status: "pending" }).sort({ createdAt: -1 }).limit(6),
     Claim.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(6),
     Payment.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(6),
     KycRequest.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(6),
     userModel.findById(req.user._id).select("-password"),
+    SupportTicket.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(6),
+
   ]);
 
   const profileFields = ["full_name", "email", "phone", "dob", "gender", "address", "profile_image", "role", "kyc_status"];
@@ -31,7 +34,7 @@ const getDashboard = catchAsync(async (req, res) => {
       claimStatus,
       paymentHistory,
       kycStatus: req.user.kyc_status,
-      supportTickets: [],
+      supportTickets,
       profileCompletion: Math.round((filledFields.length / profileFields.length) * 100),
       kycRequests,
       user: userModel,

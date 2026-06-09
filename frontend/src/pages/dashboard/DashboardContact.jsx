@@ -1,30 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Clock3, Mail, MapPin, MessageCircle, PhoneCall, Send, ShieldCheck } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useAuth } from "../../contexts/useAuth";
-
-// Support chat storage key in localStorage for persistence
-const SUPPORT_CHAT_KEY = "agile_insurance_support_chats_v1";
-
-// Utility to safely parse JSON from localStorage
-const safeJsonParse = (value, fallback) => {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-};
-
-// Load all support chats from localStorage
-const readChats = () => {
-  const chats = safeJsonParse(localStorage.getItem(SUPPORT_CHAT_KEY), []);
-  return Array.isArray(chats) ? chats : [];
-};
-
-// Save all support chats to localStorage
-const saveChats = (chats) => {
-  localStorage.setItem(SUPPORT_CHAT_KEY, JSON.stringify(chats));
-};
+import { apiRequest } from "../../utils/api";
 
 // Contact information displayed on the contact page
 // Edit these details to update phone, email, and support information across the app
@@ -55,59 +33,73 @@ const contactDetails = [
 // Main contact dashboard component - displays contact info and support chat interface
 const DashboardContact = () => {
   const { user } = useAuth();
-  // Load chats from localStorage on component mount
-  const [chats, setChats] = useState(() => readChats());
+  const [tickets, setTickets] = useState([]);
   const [subject, setSubject] = useState("Policy support");
   const [message, setMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [loadingTickets, setLoadingTickets] = useState(true);
 
-  // Filter chats for current user thread
-  const userThread = useMemo(
-    () => chats.filter((chat) => chat.userEmail === user?.email),
-    [chats, user?.email],
-  );
+  useEffect(() => {
+    let mounted = true;
 
-  // Send message handler - creates new chat or adds to existing thread
-  const sendMessage = () => {
+    const loadTickets = async () => {
+      setLoadingTickets(true);
+      setStatusMessage("");
+
+      try {
+        const response = await apiRequest("/api/support/tickets");
+        if (mounted) {
+          setTickets(Array.isArray(response?.data) ? response.data : []);
+        }
+      } catch (error) {
+        if (mounted) {
+          setTickets([]);
+          setStatusMessage(error.message || "Unable to load your support history right now.");
+        }
+      } finally {
+        if (mounted) {
+          setLoadingTickets(false);
+        }
+      }
+    };
+
+    if (user?.email) {
+      loadTickets();
+    } else {
+      setTickets([]);
+      setLoadingTickets(false);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.email]);
+
+  const sendMessage = async () => {
     const text = message.trim();
     if (!text) return;
 
-    // Create new message object with metadata
-    const nextMessage = {
-      id: `msg_${Date.now()}`,
-      from: "user",
-      sender: user?.fullName || "Customer",
-      text,
-      createdAt: new Date().toISOString(),
-    };
+    setIsSending(true);
+    setStatusMessage("");
 
-    // Check if open chat exists for this user
-    const existing = chats.find((chat) => chat.userEmail === user?.email && chat.status !== "Resolved");
+    try {
+      const response = await apiRequest("/api/support/tickets", {
+        method: "POST",
+        body: JSON.stringify({ subject, message: text, priority: "Medium" }),
+      });
 
-    // Update existing chat or create new one
-    const nextChats = existing
-      ? chats.map((chat) =>
-          chat.id === existing.id
-            ? { ...chat, subject, status: "Open", messages: [...chat.messages, nextMessage], updatedAt: new Date().toISOString() }
-            : chat,
-        )
-      : [
-          {
-            id: `chat_${Date.now()}`,
-            userId: user?.id,
-            userName: user?.fullName || "Customer",
-            userEmail: user?.email || "guest@agile.insurance",
-            subject,
-            priority: "Medium",
-            status: "Open",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            messages: [nextMessage],
-          },
-          ...chats,
-        ];
-    setChats(nextChats);
-    saveChats(nextChats);
-    setMessage("");
+      if (response?.data) {
+        setTickets((prev) => [response.data, ...prev]);
+      }
+
+      setMessage("");
+      setStatusMessage("Support request sent successfully.");
+    } catch (error) {
+      setStatusMessage(error.message || "Unable to send your support request right now.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -230,14 +222,17 @@ const DashboardContact = () => {
             {/* Send button - submit your message to admin */}
             <button
               onClick={sendMessage}
-              disabled={!message.trim()}
+              disabled={!message.trim() || isSending}
               className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Send message to support admin"
             >
               <Send size={16} />
-              Send
+              {isSending ? "Sending..." : "Send"}
             </button>
           </div>
+          {statusMessage ? (
+            <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-300">{statusMessage}</p>
+          ) : null}
         </div>
 
         {/* Chat message display - read messages from support thread */}
@@ -245,27 +240,49 @@ const DashboardContact = () => {
           <div className="text-sm font-black text-slate-900 dark:text-white mb-4">Your Support Thread</div>
           {/* Messages container with auto-scroll */}
           <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2">
-            {!userThread.length ? (
+            {loadingTickets ? (
+              <div className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-600 dark:bg-white/5 dark:text-slate-300 text-center">
+                Loading your support history...
+              </div>
+            ) : !tickets.length ? (
               <div className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-600 dark:bg-white/5 dark:text-slate-300 text-center">
                 <MessageCircle size={24} className="mx-auto mb-2 opacity-50" />
                 No messages yet. Send your first query to get support.
               </div>
             ) : (
-              userThread.flatMap((chat) =>
-                chat.messages.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold animate-in fade-in ${
-                      item.from === "admin"
-                        ? "bg-blue-50 text-blue-900 border-l-4 border-blue-600 dark:bg-blue-500/10 dark:text-blue-200 dark:border-blue-400"
-                        : "bg-slate-100 text-slate-700 border-l-4 border-slate-400 dark:bg-white/5 dark:text-slate-200 dark:border-slate-500"
-                    }`}
-                  >
-                    <div className="text-xs font-black uppercase tracking-wide opacity-70 mb-1">{item.sender}</div>
-                    <div className="leading-relaxed">{item.text}</div>
+              tickets.map((ticket) => (
+                <article
+                  key={ticket._id || ticket.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-white/10 dark:bg-white/5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{ticket.subject}</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Status: {ticket.status || "Open"}</div>
+                    </div>
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
+                      {ticket.priority || "Medium"}
+                    </span>
                   </div>
-                )),
-              )
+                  <div className="mt-3 space-y-2">
+                    {(ticket.messages || []).map((item) => (
+                      <div
+                        key={item._id || `${ticket._id}-${item.createdAt || Math.random()}`}
+                        className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
+                          item.senderRole === "admin"
+                            ? "bg-blue-50 text-blue-900 border-l-4 border-blue-600 dark:bg-blue-500/10 dark:text-blue-100 dark:border-blue-400"
+                            : "bg-white text-slate-700 border-l-4 border-slate-400 dark:bg-white/10 dark:text-slate-100 dark:border-slate-500"
+                        }`}
+                      >
+                        <div className="mb-1 text-[11px] font-black uppercase tracking-wide opacity-75">
+                          {item.senderRole === "admin" ? "Admin" : "You"}
+                        </div>
+                        <div className="leading-relaxed">{item.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))
             )}
           </div>
         </div>
