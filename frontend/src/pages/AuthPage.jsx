@@ -30,7 +30,7 @@ const GoogleLogo = () => (
 const AuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { register, verifyOtp, login, googleLogin, isAuthenticated, bootstrapped } = useAuth();
+  const { register, login, googleLogin, isAuthenticated, bootstrapped } = useAuth();
   const googleTokenClientRef = useRef(null);
 
   const returnTo = useMemo(() => {
@@ -60,7 +60,7 @@ const AuthPage = () => {
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const [dashboardData, setDashboardData] = useState(null);
   const resetMessaging = () => {
     setError("");
     setNotice("");
@@ -75,20 +75,6 @@ const AuthPage = () => {
     const trimmedPhone = phone.trim();
     const trimmedAddress = address.trim();
 
-    if (mode === "register" && otpStep) {
-      if (!/^\d{6}$/.test(otp.trim())) return setError("Enter the 6-digit OTP.");
-      setBusy(true);
-      try {
-        await verifyOtp({ email: trimmedEmail, otp: otp.trim() });
-        navigate(returnTo, { replace: true });
-      } catch (err) {
-        setError(err?.message || "OTP verification failed.");
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-
     if (mode === "register") {
       // Developer note: add validation for any future registration fields in this block.
       if (!trimmedName) return setError("Full Name is required.");
@@ -100,8 +86,8 @@ const AuthPage = () => {
       setBusy(true);
       try {
         const response = await register({ fullName: trimmedName, email: trimmedEmail, phone: trimmedPhone, address: trimmedAddress, password });
-        setOtpStep(true);
-        setNotice(response.message || "A fresh 6-digit OTP was sent to your email. Enter it below to verify your account.");
+        setNotice(response?.message || "Account created successfully.");
+        navigate(returnTo, { replace: true });
       } catch (err) {
         setError(err?.message || "Registration failed.");
       } finally {
@@ -186,6 +172,7 @@ const AuthPage = () => {
     resetMessaging();
   };
 
+  
   if (bootstrapped && isAuthenticated) {
     return (
       <div className="grid min-h-[60vh] place-items-center bg-white px-4">
@@ -224,7 +211,7 @@ const AuthPage = () => {
               <p className="mt-2 text-sm text-slate-600 sm:text-base">
                 {otpStep
                   ? "Enter the 6-digit OTP sent to your email address to finish account verification."
-                  : "Frontend-only authentication, document vault, and connected dashboard state."}
+                  : "Secure account creation and login connected to the backend API, with dashboard state and session restoration."}
               </p>
             </div>
 

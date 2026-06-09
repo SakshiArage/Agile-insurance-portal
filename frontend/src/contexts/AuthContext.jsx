@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./authContextInstance";
-import { getToken, setToken } from "../utils/api";
+import { apiRequest, getToken, setToken } from "../utils/api";
 
 const STORAGE_SESSION = "agile_insurance_session_v1";
 const STORAGE_LEGACY = "agile_insurance_auth_v1";
@@ -28,8 +28,19 @@ const writeUsers = (users) => {
   localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
 };
 
-const saveSession = (nextUser) => {
-  setToken(`frontend_demo_${Date.now()}`);
+const normalizeUser = (user) => ({
+  id: user?._id || user?.id || `usr_${Date.now()}`,
+  fullName: user?.full_name || user?.fullName || user?.name || "",
+  email: user?.email || "",
+  phone: user?.phone || "",
+  address: user?.address || "",
+  role: user?.role || "user",
+  createdAt: user?.createdAt || user?.created_at || new Date().toISOString(),
+  ...user,
+});
+
+const saveSession = (token, nextUser) => {
+  setToken(token || `frontend_demo_${Date.now()}`);
   localStorage.setItem(STORAGE_SESSION, JSON.stringify({ user: nextUser }));
 };
 
@@ -56,31 +67,54 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => bootstrapUser());
   const [bootstrapped] = useState(true);
 
+  useEffect(() => {
+    const restoreSession = async () => {
+      if (!getToken()) return;
+
+      try {
+        const response = await apiRequest("/api/auth/me");
+        const nextUser = normalizeUser(response?.data || response?.user || null);
+
+        if (nextUser?.email) {
+          saveSession(getToken(), nextUser);
+          setUser(nextUser);
+        }
+      } catch {
+        setToken("");
+        localStorage.removeItem(STORAGE_SESSION);
+        setUser(null);
+      }
+    };
+
+    restoreSession();
+  }, []);
+
   // Developer note: keep registration fields in sync with AuthPage and admin readRealUsers().
   const register = async ({ fullName, email, phone, address, password }) => {
-    const users = readUsers();
-    if (users.some((u) => u.email === email)) {
-      throw new Error("An account with this email already exists.");
-    }
-
-    const otp = createOtp();
-    localStorage.setItem(
-      STORAGE_PENDING,
-      JSON.stringify({
-        id: `usr_${Date.now()}`,
-        fullName,
+    const response = await apiRequest("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        full_name: fullName,
         email,
         phone,
-        address,
         password,
-        otp,
-        otpSentAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        address,
+        role: "user",
       }),
-    );
+    });
 
-    // Frontend demo: expose the generated OTP in the UI notice. Real apps should only email/SMS this code.
-    return { message: `OTP ${otp} was sent to ${email}. Enter it below to verify your account.` };
+    const token = response?.data?.token;
+    const rawUser = response?.data?.user;
+
+    if (!token || !rawUser) {
+      throw new Error(response?.message || "Registration failed.");
+    }
+
+    const nextUser = normalizeUser(rawUser);
+    saveSession(token, nextUser);
+    setUser(nextUser);
+
+    return { message: response?.message || "Account created successfully. You are now signed in.", user: nextUser };
   };
 
   // Developer note: verification currently checks the pending localStorage record.
@@ -107,21 +141,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async ({ email, password }) => {
-    const users = readUsers();
-    const match = users.find((u) => u.email === email && u.password === password);
-    if (!match) throw new Error("Invalid email or password.");
+    const response = await apiRequest("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
 
-    const loggedInUser = {
-      id: match.id,
-      fullName: match.fullName,
-      email: match.email,
-      phone: match.phone,
-      address: match.address || "",
-      createdAt: match.createdAt,
-    };
+    const token = response?.data?.token;
+    const rawUser = response?.data?.user;
 
-    saveSession(loggedInUser);
+    if (!token || !rawUser) {
+      throw new Error(response?.message || "Login failed.");
+    }
+
+    const loggedInUser = normalizeUser(rawUser);
+    saveSession(token, loggedInUser);
     setUser(loggedInUser);
+
     return loggedInUser;
   };
 
@@ -139,7 +174,13 @@ export const AuthProvider = ({ children }) => {
     return googleUser;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await apiRequest("/api/auth/logout", { method: "POST", skipAuth: false });
+    } catch {
+      // Ignore backend logout errors and clear the local session anyway.
+    }
+
     setToken("");
     localStorage.removeItem(STORAGE_SESSION);
     setUser(null);
