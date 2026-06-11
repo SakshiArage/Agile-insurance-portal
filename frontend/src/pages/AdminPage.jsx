@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { apiRequest, getToken } from "../utils/api";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -759,6 +761,8 @@ const AdminSidebar = ({
 );
 
 const AdminPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [adminProfiles, setAdminProfiles] = useState(() => loadAdmins());
   // FIX 3: selectedProfile should be a single profile object, not the entire array
   const [selectedProfile, setSelectedProfile] = useState(() => loadAdmins()[0]);
@@ -801,9 +805,98 @@ const AdminPage = () => {
     photo: "",
   });
 
+  const currentRoutePage = useMemo(() => {
+    const routeSegment = location.pathname.replace(/^\/admin\/?/, "").split("/")[0] || "dashboard";
+    return ["dashboard", "users", "claims", "requirements", "support", "policies", "documents", "notifications", "reports", "profile", "auditlog", "settings", "setting-detail"].includes(routeSegment)
+      ? routeSegment
+      : "dashboard";
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setActivePage(currentRoutePage);
+  }, [currentRoutePage]);
+
   const activeUsers = customerRows.filter((user) => user.status === "Active" || user.status === "Logged In").length;
 
-  const addAuditLogEntry = (actionString) => {
+  useEffect(() => {
+    const hydrateAdminData = async () => {
+      if (!getToken()) return;
+
+      try {
+        const [dashboardResponse, usersResponse, claimsResponse, policiesResponse, settingsResponse, auditResponse] = await Promise.all([
+          apiRequest("/api/admin/dashboard"),
+          apiRequest("/api/admin/users"),
+          apiRequest("/api/admin/claims"),
+          apiRequest("/api/admin/policies"),
+          apiRequest("/api/admin/settings"),
+          apiRequest("/api/admin/audit-logs"),
+        ]);
+
+        const backendUsers = Array.isArray(usersResponse?.data) ? usersResponse.data : [];
+        const backendClaims = Array.isArray(claimsResponse?.data) ? claimsResponse.data : [];
+        const backendPolicies = Array.isArray(policiesResponse?.data) ? policiesResponse.data : [];
+
+        setCustomerRows(
+          backendUsers.map((user) => ({
+            id: user._id || user.id,
+            name: user.full_name || user.fullName || user.name || "Customer",
+            email: user.email || "",
+            phone: user.phone || "",
+            address: user.address || "Not added",
+            policies: user.policyCount ?? 0,
+            status: user.kyc_status === "verified" ? "Active" : user.status || "Active",
+            city: user.city || user.address || "Not added",
+            profilePhoto: user.profile_image || user.profilePhoto || "",
+          })),
+        );
+
+        setClaimRows(
+          backendClaims.map((claim) => ({
+            id: claim.claim_number || claim._id,
+            user: claim.user?.full_name || claim.user?.name || "Unknown",
+            policy: claim.policy?.policy_name || claim.policy?.type || claim.claim_type || "Insurance",
+            amount: claim.amount ? `INR ${Number(claim.amount).toLocaleString("en-IN")}` : "INR 0",
+            status: claim.status || "Pending",
+            officer: claim.assignedAdmin?.full_name || selectedProfile.name,
+          })),
+        );
+
+        setPlanRows(
+          backendPolicies.map((policy) => ({
+            name: policy.policy_name || policy.name || "Policy",
+            type: policy.policy_type || "Insurance",
+            coverage: policy.coverage_amount ? `INR ${Number(policy.coverage_amount).toLocaleString("en-IN")}` : "INR 0",
+            premium: policy.premium_amount ? `INR ${Number(policy.premium_amount).toLocaleString("en-IN")}/mo` : "INR 0/mo",
+            duration: policy.end_date ? `${new Date(policy.start_date).toLocaleDateString()} - ${new Date(policy.end_date).toLocaleDateString()}` : "1 year",
+            state: policy.status || "Active",
+          })),
+        );
+
+        if (settingsResponse?.data) {
+          setSystemSettings(settingsResponse.data);
+        }
+
+        if (Array.isArray(auditResponse?.data)) {
+          setAuditLogs(auditResponse.data);
+        }
+
+        if (dashboardResponse?.data?.widgets) {
+          const widgets = dashboardResponse.data.widgets;
+          setDetail({
+            title: "Backend dashboard synced",
+            body: `Users: ${widgets.totalUsers || 0}, Policies: ${widgets.activePolicies || 0}, Claims pending: ${widgets.pendingClaims || 0}, Revenue: INR ${Number(widgets.totalRevenue || 0).toLocaleString("en-IN")}`,
+            photo: "",
+          });
+        }
+      } catch (error) {
+        console.warn("Admin backend sync unavailable, using local demo data.", error);
+      }
+    };
+
+    hydrateAdminData();
+  }, [selectedProfile.name]);
+
+  const addAuditLogEntry = async (actionString, moduleName = "admin") => {
     const nextLog = {
       id: `LOG-${Date.now().toString().slice(-4)}`,
       action: actionString,
@@ -811,11 +904,27 @@ const AdminPage = () => {
       initials: selectedProfile?.initials || "SYS",
       createdAt: new Date().toISOString(),
     };
+
     setAuditLogs((currentLogs) => {
       const updated = [nextLog, ...currentLogs];
       saveAuditLogs(updated);
       return updated;
     });
+
+    try {
+      if (getToken()) {
+        await apiRequest("/api/admin/audit-logs", {
+          method: "POST",
+          body: JSON.stringify({
+            action: actionString,
+            module: moduleName,
+            description: actionString,
+          }),
+        });
+      }
+    } catch (error) {
+      console.warn("Audit log DB write failed, saved locally instead.", error);
+    }
   };
 
   const dashboardMetrics = useMemo(
@@ -838,8 +947,10 @@ const AdminPage = () => {
   );
 
   const openPage = (page) => {
+    const nextPath = page === "dashboard" ? "/admin" : `/admin/${page}`;
     setActivePage(page);
     setMobileOpen(false);
+    navigate(nextPath);
     setDetail({ title: pageTitles[page], body: `You opened ${pageTitles[page]} as ${selectedProfile.role}.`, photo: "" });
   };
 
@@ -1165,9 +1276,11 @@ const AdminPage = () => {
     return saved ?? field.defaultValue ?? "";
   };
 
-  const updateSettingModule = (settingId, field, value) => {
+  const updateSettingModule = async (settingId, field, value) => {
+    let next = null;
+
     setSystemSettings((settings) => {
-      const next = {
+      next = {
         ...settings,
         modules: {
           ...(settings.modules || {}),
@@ -1180,6 +1293,22 @@ const AdminPage = () => {
       saveSystemSettings(next);
       return next;
     });
+
+    try {
+      if (getToken()) {
+        const response = await apiRequest("/api/admin/settings", {
+          method: "PATCH",
+          body: JSON.stringify(next || systemSettings),
+        });
+
+        if (response?.data) {
+          setSystemSettings(response.data);
+        }
+      }
+    } catch (error) {
+      console.warn("Settings update could not reach backend, saved locally instead.", error);
+    }
+
     addAuditLogEntry(`/api/v4/settings/update -> ${settingId}.${field.name}`);
     runAction("Setting applied", `${field.label} updated in real time.`);
   };
@@ -2139,6 +2268,7 @@ const AdminPage = () => {
         onLogin={() => {
           setIsAuthenticated(true);
           setActivePage("dashboard");
+          navigate("/admin");
           setAdminNameDraft(selectedProfile.name);
           addAuditLogEntry(`Authentication / Login successful as [${selectedProfile.role}]`);
           setDetail({ title: "Login successful", body: `${selectedProfile.name} signed in as ${selectedProfile.role}.`, photo: selectedProfile.profilePhoto || "" });

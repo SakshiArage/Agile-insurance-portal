@@ -9,20 +9,31 @@ const {
   getClaims,
   getPayments,
   getKycRequests,
+  getSystemSettings,
+  updateSystemSettings,
+  createAuditLog,
+  getAuditLogs,
   reviewKyc,
 } = require("../Controllers/admin.controller");
 
 const router = express.Router();
 
+router.get("/settings", getSystemSettings);
+router.patch("/settings", updateSystemSettings);
+
 router.use(authenticateUser, authorizeRoles("admin"));
 
 router.get("/dashboard", getDashboard);
 router.get("/users", getUsers);
-router.get("/agents", getAgents);
-router.get("/policies", getPolicies);
 router.get("/claims", getClaims);
+
+router.get("/policies", getPolicies);
+
+router.get("/agents", getAgents);
 router.get("/payments", getPayments);
 router.get("/kyc-requests", getKycRequests);
+router.get("/audit-logs", getAuditLogs);
+router.post("/audit-logs", createAuditLog);
 router.patch("/kyc-requests/:id", reviewKyc);
 
 module.exports = router;
