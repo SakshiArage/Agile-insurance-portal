@@ -41,9 +41,11 @@ const systemSettingsSchema = new mongoose.Schema(
     },
         // Payment Gateways
         paymentGateways:{
-            razorpay:{ type: Boolean, default: true},
+            netBanking:{ type: Boolean, default: true},
             upi: {type: Boolean, default: true},
             cards:{type: Boolean, default: true},
+            wallets:{type: Boolean, default: true},
+            minimumPayment: {type: Number, default: 500},
         },
 
 // Withdrawals Methods
@@ -69,7 +71,7 @@ const systemSettingsSchema = new mongoose.Schema(
     features: {
       aiAssistant: { type: Boolean, default: true },
       policyCompare: { type: Boolean, default: true },
-      claimTracking: { type: Boolean, default: true }, 
+      // claimTracking: { type: Boolean, default: true }, 
       voiceSupport: { type: Boolean, default: true }, 
         
     },

@@ -32,13 +32,13 @@ const authenticateUser = catchAsync(async (req, res, next) => {
   
   req.user = user;
   req.tokenPayload = decoded;
-  console.log("===== AUTH =====");
-console.log("Authorization Header:", req.headers.authorization);
-console.log("Authenticated User:", {
-  id: user._id,
-  email: user.email,
-  role: user.role,
-});
+//   console.log("===== AUTH =====");
+// console.log("Authorization Header:", req.headers.authorization);
+// console.log("Authenticated User:", {
+//   id: user._id,
+//   email: user.email,
+//   role: user.role,
+// });
   next();
   });
 

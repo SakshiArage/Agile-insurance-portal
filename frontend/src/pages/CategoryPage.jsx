@@ -272,7 +272,7 @@ const FiltersPanel = ({
         >
           <RefreshCw size={18} />
           Reset filters
-        </button>
+        </button> 
       </div>
     </div>
   );
