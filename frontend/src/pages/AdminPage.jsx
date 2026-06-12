@@ -221,9 +221,10 @@ const settingFieldGroups = {
     { name: "renewalReminderDays", label: "Renewal Reminder Days", type: "number", defaultValue: 15 },
   ],
   payment: [
-    { name: "razorpay", label: "Razorpay Gateway", type: "boolean", defaultValue: true },
+    { name: "netBanking", label: "Net Banking", type: "boolean", defaultValue: true },
     { name: "upi", label: "UPI Payments", type: "boolean", defaultValue: true },
     { name: "cards", label: "Card Payments", type: "boolean", defaultValue: true },
+    { name: "wallets", label: "Wallets", type: "boolean", defaultValue: true },
     { name: "minimumPayment", label: "Minimum Payment", type: "number", defaultValue: 500 },
   ],
   withdrawals: [
@@ -238,12 +239,17 @@ const settingFieldGroups = {
     { name: "lifeForm", label: "Life Policy Form", type: "boolean", defaultValue: true },
     { name: "requiredFields", label: "Required Fields", type: "textarea", defaultValue: "Full name, phone, email, policy type, ID proof" },
   ],
+
+
   features: [
+    
     { name: "aiAssistant", label: "AI Assistant", type: "boolean", defaultValue: true },
     { name: "policyCompare", label: "Policy Compare", type: "boolean", defaultValue: true },
     { name: "claimTracking", label: "Claim Tracking", type: "boolean", defaultValue: true },
-    { name: "voiceSupport", label: "Voice Support", type: "boolean", defaultValue: false },
+    // { name: "voiceSupport", label: "Voice Support", type: "boolean", defaultValue: false },
   ],
+
+
   regulations: [
     { name: "coveredItems", label: "Covered Items", type: "textarea", defaultValue: "Hospitalization, accident damage, policy benefits, verified expenses" },
     { name: "excludedItems", label: "Excluded Items", type: "textarea", defaultValue: "Fraudulent claims, expired policies, missing documents" },

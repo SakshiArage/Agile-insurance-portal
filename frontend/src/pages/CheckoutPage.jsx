@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -17,6 +17,7 @@ import {
 import { getPolicyById } from "../data/catalog";
 import { load, save, uid } from "../utils/storage";
 import { useAuth } from "../contexts/useAuth";
+import { apiRequest } from "../utils/api";
 
 const formatInr = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 
@@ -27,12 +28,40 @@ const CheckoutPage = () => {
   const { policyId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-
   const policy = getPolicyById(policyId);
-
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("upi");
+  
+  const [settingsPayments, setSettingsPayments] = useState({
+  netBanking: true,
+  upi: true,
+  cards: true,
+  wallets: true,
+});
+
+
+
+
+useEffect(() => {
+  const fetchSettings = async () => {
+    try {
+      const response = await apiRequest("/api/admin/settings");
+      const settings = response?.data;
+
+      setSettingsPayments(settings?.paymentGateways || {});
+    } catch (error) {
+      console.error("Failed to fetch system settings:", error);
+    }
+  };
+
+  fetchSettings();
+}, []);
+
+
+
+
+
 
   const [form, setForm] = useState({
     fullName: user?.fullName ?? "",
@@ -332,14 +361,22 @@ const CheckoutPage = () => {
               <div className="text-sm font-black text-slate-900">Payment methods</div>
               <div className="mt-5 space-y-3">
                 {[
+                  { id: "netBanking", label: "Net Banking", icon: Landmark },
                   { id: "upi", label: "UPI", icon: Wallet },
-                  { id: "card", label: "Credit/Debit Card", icon: CreditCard },
-                  { id: "netbanking", label: "Net Banking", icon: Landmark },
-                  { id: "wallet", label: "Wallets", icon: Building2 },
-                ].map((m) => {
+                  { id: "cards", label: "Credit/Debit Card", icon: CreditCard },
+                  { id: "wallets", label: "Wallets", icon: Building2 },
+                ]
+                .filter((m) => settingsPayments?.[m.id])
+.map((m) => {
+
+
+
+
+
                   const Icon = m.icon;
-                  const active = paymentMethod === m.id;
-                  return (
+const active = paymentMethod === m.id;     
+
+return (
                     <button
                       key={m.id}
                       onClick={() => setPaymentMethod(m.id)}
