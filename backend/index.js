@@ -10,6 +10,7 @@ const connectDB = require("./db/connect");
 const errorHandler = require("./Middlewares/error.middleware");
 const AppError = require("./Utils/appError");
 
+// Routes
 const authRoutes = require("./Routes/auth.route");
 const adminRoutes = require("./Routes/admin.route");
 const userRoutes = require("./Routes/user.route");
@@ -74,5 +75,5 @@ app.use(errorHandler);
 
 // Start Server
 app.listen(PORT, () => {
-  console.log("Server is running on", PORT);
+  console.log(`Server is running on ${PORT}`);
 });

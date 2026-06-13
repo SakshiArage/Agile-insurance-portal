@@ -38,6 +38,51 @@ const claimSchema = new mongoose.Schema(
       enum: ["pending", "verified", "flagged"],
       default: "pending",
     },
+    category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "InsuranceCategory",
+    required: true
+  },
+
+  companyName: {
+    type: String,
+    required: true
+  },
+
+  companyLogo: String,
+
+  policyName: {
+    type: String,
+    required: true
+  },
+
+  monthlyPremium: Number,
+
+  coverageAmount: Number,
+
+  claimRatio: Number,
+
+  validityYears: Number,
+
+  rating: Number,
+
+  emiAvailable: {
+    type: Boolean,
+    default: false
+  },
+
+  policyType: String,
+
+  features: [{
+    type: String
+  }],
+
+  description: String,
+
+  isActive: {
+    type: Boolean,
+    default: true
+  }
   },
   {
     timestamps: true,

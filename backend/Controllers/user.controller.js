@@ -7,7 +7,8 @@ const userModel = require("../Models/userModel.model");
 const SupportTicket = require("../Models/contact.model");
 
 const getDashboard = catchAsync(async (req, res) => {
-  const [activePolicies, upcomingPremiums, claimStatus, paymentHistory, kycRequests, userModel, supportTickets] = await Promise.all([
+  const [activePolicies, upcomingPremiums, claimStatus, paymentHistory, kycRequests, userModel, supportTickets] = 
+  await Promise.all([
     Policy.find({ user: req.user._id, status: "active" }).sort({ createdAt: -1 }).limit(6),
     Payment.find({ user: req.user._id, status: "pending" }).sort({ createdAt: -1 }).limit(6),
     Claim.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(6),
@@ -19,6 +20,9 @@ const getDashboard = catchAsync(async (req, res) => {
   ]);
 
   const profileFields = ["full_name", "email", "phone", "dob", "gender", "address", "profile_image", "role", "kyc_status"];
+  
+  
+  
   const filledFields = profileFields.filter((field) => {
     if (field === "profile_image") return Boolean(req.user.profile_image);
     if (field === "dob") return Boolean(req.user.dob);

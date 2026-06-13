@@ -2,21 +2,35 @@ const mongoose = require("mongoose");
 
 const policySchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
-    agent: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+    admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true
+},
+  companyName: {
+    type: String,
+    required: true
+  },
+  companyLogo: String,
+
     policy_name: {
       type: String,
       required: true,
       trim: true,
     },
+
+
+     monthlyPremium: Number,
+
+  coverageAmount: Number,
+
+  claimRatio: Number,
+
+  validityYears: Number,
+
+  rating: Number,
+
+
     policy_type: {
       type: String,
       required: true,
@@ -35,7 +49,23 @@ const policySchema = new mongoose.Schema(
       index:true,
     },
     
+    emiAvailable: {
+    type: Boolean,
+    default: false
+  },
 
+  policyType: String,
+
+  features: [{
+    type: String
+  }],
+
+  description: String,
+
+  isActive: {
+    type: Boolean,
+    default: true
+  },
     policy_number: {
       type: String,
       required: true,

@@ -93,6 +93,7 @@ const defaultAdminProfiles = [
   },
 ];
 
+
 const defaultAuditLogs = [
   { id: "LOG-001", action: "/api/v4/bridges/deploy", username: "asha.admin@agileinsure.in", initials: "AM", createdAt: new Date(Date.now() - 3600000).toISOString() },
   { id: "LOG-002", action: "/api/v4/assets/create", username: "rohit.manager@agileinsure.in", initials: "RK", createdAt: new Date(Date.now() - 14400000).toISOString() },
@@ -123,12 +124,6 @@ const metrics = [
   { label: "Revenue Generated", value: "INR 8.42 Cr", change: "+18.2%", icon: CreditCard, tone: "bg-indigo-600", page: "reports" },
 ];
 
-const users = [
-  { id: "USR1001", name: "Priya Sharma", email: "priya@example.com", phone: "+91 98765 43210", policies: 3, status: "Active", city: "Pune" },
-  { id: "USR1002", name: "Rahul Verma", email: "rahul@example.com", phone: "+91 99887 77665", policies: 1, status: "Active", city: "Delhi" },
-  { id: "USR1003", name: "Ananya Iyer", email: "ananya@example.com", phone: "+91 91234 56780", policies: 4, status: "Inactive", city: "Bengaluru" },
-  { id: "USR1004", name: "Kabir Singh", email: "kabir@example.com", phone: "+91 95555 44112", policies: 2, status: "Active", city: "Mumbai" },
-];
 
 const claims = [
   { id: "CLM001", user: "John Mathew", policy: "Health", amount: "INR 50,000", status: "Pending", officer: "Riya S." },
@@ -197,12 +192,16 @@ const adminSettingCards = [
 
 // Developer note: edit field definitions here to change which controls appear inside each settings tile.
 const settingFieldGroups = {
+
   general: [
     { name: "companyName", label: "Company Name", type: "text", defaultValue: "Agile Insurance" },
     { name: "supportEmail", label: "Support Email", type: "text", defaultValue: "support@agileinsure.in" },
     { name: "supportPhone", label: "Support Phone", type: "text", defaultValue: "+91 98765 43210" },
     { name: "serviceTaxRate", label: "Service Tax Rate (%)", type: "number", defaultValue: 18 },
   ],
+
+
+
   // branding: [
   //   { name: "logo", label: "Logo", type: "file", accept: "image/*", defaultValue: "" },
   //   { name: "favicon", label: "Favicon", type: "file", accept: "image/*", defaultValue: "" },
@@ -214,12 +213,18 @@ const settingFieldGroups = {
     { name: "documentsModule", label: "Document Vault", type: "boolean", defaultValue: true },
     { name: "supportModule", label: "Support Center", type: "boolean", defaultValue: true },
   ],
+
+
+
   notifications: [
     { name: "emailEnabled", label: "Email Notifications", type: "boolean", defaultValue: true },
     { name: "smsEnabled", label: "SMS Notifications", type: "boolean", defaultValue: true },
     { name: "pushEnabled", label: "Push Notifications", type: "boolean", defaultValue: false },
     { name: "renewalReminderDays", label: "Renewal Reminder Days", type: "number", defaultValue: 15 },
   ],
+
+
+
   payment: [
     { name: "netBanking", label: "Net Banking", type: "boolean", defaultValue: true },
     { name: "upi", label: "UPI Payments", type: "boolean", defaultValue: true },
@@ -227,12 +232,18 @@ const settingFieldGroups = {
     { name: "wallets", label: "Wallets", type: "boolean", defaultValue: true },
     { name: "minimumPayment", label: "Minimum Payment", type: "number", defaultValue: 500 },
   ],
+
+
+
   withdrawals: [
     { name: "bankTransfer", label: "Bank Transfer", type: "boolean", defaultValue: true },
     { name: "upiPayout", label: "UPI Payout", type: "boolean", defaultValue: true },
     { name: "minimumWithdrawal", label: "Minimum Withdrawal", type: "number", defaultValue: 1000 },
     { name: "payoutNote", label: "Payout Instructions", type: "textarea", defaultValue: "Verify bank details before approving payouts." },
   ],
+
+
+
   forms: [
     { name: "healthForm", label: "Health Policy Form", type: "boolean", defaultValue: true },
     { name: "motorForm", label: "Motor Policy Form", type: "boolean", defaultValue: true },
@@ -254,11 +265,17 @@ const settingFieldGroups = {
     { name: "excludedItems", label: "Excluded Items", type: "textarea", defaultValue: "Fraudulent claims, expired policies, missing documents" },
     { name: "highValueReviewAmount", label: "High Value Review Amount", type: "number", defaultValue: 100000 },
   ],
+
+
+
   seo: [
     { name: "metaTitle", label: "Meta Title", type: "text", defaultValue: "Agile Insurance Portal" },
     { name: "metaDescription", label: "Meta Description", type: "textarea", defaultValue: "Compare, buy, and manage insurance policies online." },
     { name: "keywords", label: "Meta Keywords", type: "textarea", defaultValue: "insurance, claims, policy, health insurance, car insurance" },
   ],
+
+
+
   // frontend: [
   //   { name: "heroTitle", label: "Home Hero Title", type: "text", defaultValue: "Smart Insurance for Every Need" },
   //   { name: "primaryCta", label: "Primary CTA", type: "text", defaultValue: "Explore Policies" },
@@ -270,12 +287,18 @@ const settingFieldGroups = {
     { name: "articlesPage", label: "Articles Page", type: "boolean", defaultValue: true },
     { name: "pageNotice", label: "Page Notice", type: "textarea", defaultValue: "Static pages are managed by the admin team." },
   ],
+
+
+
   kyc: [
     { name: "aadhaarRequired", label: "Aadhaar Required", type: "boolean", defaultValue: true },
     { name: "panRequired", label: "PAN Required", type: "boolean", defaultValue: true },
     { name: "selfieRequired", label: "Selfie Required", type: "boolean", defaultValue: false },
     { name: "autoRejectIncomplete", label: "Auto Reject Incomplete KYC", type: "boolean", defaultValue: false },
   ],
+
+
+
   social: [
     { name: "googleLogin", label: "Google Login", type: "boolean", defaultValue: true },
     { name: "facebookLogin", label: "Facebook Login", type: "boolean", defaultValue: false },
@@ -301,6 +324,8 @@ const settingFieldGroups = {
  
  
 };
+
+
 
 const policyPlans = [
   { name: "Health Secure Plus", type: "Health", coverage: "INR 25L", premium: "INR 1,850/mo", duration: "1 year", state: "Active" },
@@ -840,10 +865,6 @@ const AdminPage = () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [customerRows, setCustomerRows] = useState(() => {
-    const realUsers = readRealUsers();
-    return realUsers.length ? realUsers : users;
-  });
   const [claimRows, setClaimRows] = useState(claims);
   const [ticketRows, setTicketRows] = useState(tickets);
   const [requirementRows, setRequirementRows] = useState(requirements);
@@ -876,6 +897,34 @@ const AdminPage = () => {
     photo: "",
   });
 
+  const [customerRows, setCustomerRows] = useState([]);
+  
+//   const [users, setUsers] = useState([]);
+// useEffect(() => {
+//   const fetchUsers = async () => {
+//     try {
+//       const response = await apiRequest("/api/admin/users");
+
+//       const data = response.data; // if using axios
+
+//       if (data.success) {
+//         setCustomerRows(data.users);
+//       }
+//     } catch (error) {
+//       console.error("Error fetching users:", error);
+//     }
+//   };
+
+//   fetchUsers();
+// }, []);
+
+const activeUsers = customerRows.filter(
+  (user) => user.status === "Active"
+).length;
+
+
+
+
   const currentRoutePage = useMemo(() => {
     const routeSegment = location.pathname.replace(/^\/admin\/?/, "").split("/")[0] || "dashboard";
     return ["dashboard", "users", "claims", "requirements", "support", "policies", "documents", "notifications", "reports", "profile", "auditlog", "settings", "setting-detail"].includes(routeSegment)
@@ -883,11 +932,11 @@ const AdminPage = () => {
       : "dashboard";
   }, [location.pathname]);
 
+
   useEffect(() => {
     setActivePage(currentRoutePage);
   }, [currentRoutePage]);
 
-  const activeUsers = customerRows.filter((user) => user.status === "Active" || user.status === "Logged In").length;
 
   useEffect(() => {
     const hydrateAdminData = async () => {
@@ -911,23 +960,57 @@ const AdminPage = () => {
           apiRequest("/api/admin/audit-logs"),
         ]);
 
-        const backendUsers = Array.isArray(usersResponse?.data) ? usersResponse.data : [];
+       console.log("Users API Response:", usersResponse);
+
+const backendUsers =
+  usersResponse?.data?.users ||
+  usersResponse?.data?.data ||
+  usersResponse?.data ||
+  [];
         const backendClaims = Array.isArray(claimsResponse?.data) ? claimsResponse.data : [];
         const backendPolicies = Array.isArray(policiesResponse?.data) ? policiesResponse.data : [];
 
-        setCustomerRows(
-          backendUsers.map((user) => ({
-            id: user._id || user.id,
-            name: user.full_name || user.fullName || user.name || "Customer",
-            email: user.email || "",
-            phone: user.phone || "",
-            address: user.address || "Not added",
-            policies: user.policyCount ?? 0,
-            status: user.kyc_status === "verified" ? "Active" : user.status || "Active",
-            city: user.city || user.address || "Not added",
-            profilePhoto: user.profile_image || user.profilePhoto || "",
-          })),
-        );
+       setCustomerRows(
+  backendUsers.map((user) => ({
+    id: user._id || user.id,
+    name:
+      user.full_name ||
+      user.fullName ||
+      user.name ||
+      "No Name",
+
+    email: user.email || "",
+
+    phone:
+      user.phone ||
+      user.mobile ||
+      user.contact ||
+      "Not Added",
+
+    address:
+      user.address ||
+      user.location ||
+      "Not Added",
+
+    policies:
+      user.policies?.length ||
+      user.policyCount ||
+      0,
+
+    status:
+      user.status ||
+      (user.is_verified
+        ? "Active"
+        : "Inactive"),
+
+    city:
+      user.city ||
+      user.address?.city ||
+      "Not Added",
+  }))
+);
+
+
 
         setClaimRows(
           backendClaims.map((claim) => ({
@@ -1147,12 +1230,47 @@ const AdminPage = () => {
     runAction("Document sent back", `${selectedDocument.owner} will see the marked corrections for ${selectedDocument.type}.`);
   };
 
-  const refreshRealUsers = () => {
-    const realUsers = readRealUsers();
-    setCustomerRows(realUsers.length ? realUsers : users);
-    runAction("Users refreshed", `${realUsers.length} real registered or logged-in users loaded from the app profile store.`);
-  };
+  const refreshRealUsers = async () => {
+  try {
+    const response = await apiRequest("/api/admin/users");
 
+    const backendUsers =
+      response?.data?.users ||
+      response?.data?.data ||
+      response?.data ||
+      [];
+
+    setCustomerRows(
+      backendUsers.map((user) => ({
+        id: user._id || user.id,
+        name:
+          user.full_name ||
+          user.fullName ||
+          user.name,
+        email: user.email,
+        phone: user.phone || "Not Added",
+        address: user.address || "Not Added",
+        policies:
+          user.policies?.length ||
+          user.policyCount ||
+          0,
+        status:
+          user.status ||
+          (user.is_verified
+            ? "Active"
+            : "Inactive"),
+        city: user.city || "Not Added",
+      }))
+    );
+
+    runAction(
+      "Users refreshed",
+      `${backendUsers.length} users loaded from database`
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
   const createCustomer = () => {
     const nextUser = {
       id: `USR${Date.now().toString().slice(-5)}`,
@@ -1694,7 +1812,7 @@ const AdminPage = () => {
           <div className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm font-bold text-blue-800">
             Showing real app profiles from registration/login storage. Active users: {activeUsers}.
           </div>
-          <DataTable columns={["id", "name", "email", "phone", "address", "policies", "status", "city"]} rows={customerRows} renderActions={(row) => actionButtons(row, "users")} />
+          <DataTable columns={["id", "name", "email", "phone", "address", "status"]} rows={customerRows} renderActions={(row) => actionButtons(row, "users")} />
         </section>
       );
     }

@@ -39,9 +39,35 @@ const getDashboard = catchAsync(async (req, res) => {
 });
 
 const getUsers = catchAsync(async (req, res) => {
-  const users = await User.find({ role: "user" }).select("-password").sort({ created_at: -1 });
-  res.status(200).json({ success: true, data: users });
+  try{
+    const users = await User.find()
+    .select(
+      "_id full_name email phone is_verified created_at"
+    );
+    const formattedUsers = users.map((user) => ({
+      id: user._id,
+      name: user.full_name,
+      email:user.email,
+      phone: user.phone,
+      address: user.address,
+      status: user.is_verified? "Active": "Inactive",
+      joinedAt:user.createdAt,
+    }));
+    res.status(200).json({
+      success: true,
+      users: formattedUsers,
+    });
+
+  }
+  catch(error){
+    res.status(500).json({
+      sucess: false,
+      message: error.message
+    });
+  }
 });
+
+
 
 const getAgents = catchAsync(async (req, res) => {
   const agents = await User.find({ role: "agent" }).select("-password").sort({ created_at: -1 });
