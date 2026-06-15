@@ -30,7 +30,7 @@ const writeUsers = (users) => {
 
 const normalizeUser = (user) => ({
   id: user?._id || user?.id || `usr_${Date.now()}`,
-  fullName: user?.full_name || user?.fullName || user?.name || "",
+  fullName: user?.fullName || user?.fullName || user?.name || "",
   email: user?.email || "",
   phone: user?.phone || "",
   address: user?.address || "",
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     const response = await apiRequest("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
-        full_name: fullName,
+        fullName: fullName,
         email,
         phone,
         password,

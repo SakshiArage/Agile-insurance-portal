@@ -9,12 +9,12 @@ const systemSettingsSchema = new mongoose.Schema(
         serviceTaxRate: {type: Number, default: 0},
 
         // Logo and Favicon
-        // logoUrl: {type: String, default: ""},
-        // faviconUrl: {type: String, default: ""},
-        // brandColors: {
-        //     primary: {type: String, default: "#007bff"},
-        //     secondary: {type: String, default: "#6c757d"},
-        // },
+        logoUrl: {type: String, default: ""},
+        faviconUrl: {type: String, default: ""},
+        brandColors: {
+            primary: {type: String, default: "#007bff"},
+            secondary: {type: String, default: "#6c757d"},
+        },
 
 
 
@@ -92,12 +92,12 @@ const systemSettingsSchema = new mongoose.Schema(
     },
 
     // Manage Frontend
-    // frontend: {
-    //     homeHeroTitle: {
-    //   type: String,
-    //   default: "Smart Insurance for Every Need",
-    // },
-    // },
+    frontend: {
+        homeHeroTitle: {
+      type: String,
+      default: "Smart Insurance for Every Need",
+    },
+    },
 //Manage pages
     pages:{
         aboutPage: {
@@ -157,36 +157,36 @@ socialLogin: {
 },
 
 // Language Settings
-// language: {
-//   defaultLanguage: {
-//     type: String,
-//     default: "English",
-//   },
+language: {
+  defaultLanguage: {
+    type: String,
+    default: "English",
+  },
 
-//   enableMultiLanguage: {
-//     type: Boolean,
-//     default: false,
-//   },
+  enableMultiLanguage: {
+    type: Boolean,
+    default: false,
+  },
 
-// },
+},
 
-// // Extensions Settings
-// extensions: {
-//   analyticsExtension: {
-//     type: Boolean,
-//     default: true,
-//   },
+// Extensions Settings
+extensions: {
+  analyticsExtension: {
+    type: Boolean,
+    default: true,
+  },
 
-//   chatbotExtension: {
-//     type: Boolean,
-//     default: true,
-//   },
+  chatbotExtension: {
+    type: Boolean,
+    default: true,
+  },
 
-//   documentScanner: {
-//     type: Boolean,
-//     default: false,
-//   },
-// },
+  documentScanner: {
+    type: Boolean,
+    default: false,
+  },
+},
 
 // Maintenance Mode
 maintenanceMode: {
@@ -203,27 +203,27 @@ maintenanceMode: {
 },
 
 // GDPR Cookie Settings
-// gdprCookie: {
-//   bannerEnabled: {
-//     type: Boolean,
-//     default: true,
-//   },
+gdprCookie: {
+  bannerEnabled: {
+    type: Boolean,
+    default: true,
+  },
 
-//   cookieMessage: {
-//     type: String,
-//     default:
-//       "We use cookies to improve your insurance portal experience.",
-//   },
-// },
-    // primaryCTA: {
-    //   type: String,
-    //   default: "Explore Policies",
-    // },
+  cookieMessage: {
+    type: String,
+    default:
+      "We use cookies to improve your insurance portal experience.",
+  },
+},
+    primaryCTA: {
+      type: String,
+      default: "Explore Policies",
+    },
 
-    // showTestimonials: {
-    //   type: Boolean,
-    //   default: true,
-    // },
+    showTestimonials: {
+      type: Boolean,
+      default: true,
+    },
 
 
 

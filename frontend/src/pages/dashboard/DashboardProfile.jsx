@@ -143,7 +143,7 @@ const DashboardProfile = () => {
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-black text-slate-900 dark:text-white">{profile?.full_name || user?.fullName || "Member"}</div>
+              <div className="text-sm font-black text-slate-900 dark:text-white">{profile?.fullName || user?.fullName || "Member"}</div>
               <div className="mt-1 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{profile?.email || user?.email}</div>
             </div>
             <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
@@ -154,7 +154,7 @@ const DashboardProfile = () => {
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Developer note: profile summary fields mirror the verified user object from AuthContext. */}
             {[
-              { label: "Full name", value: profile?.full_name || user?.fullName || "—" },
+              { label: "Full name", value: profile?.fullName || user?.fullName || "—" },
               { label: "Email", value: profile?.email || user?.email || "—" },
               { label: "Phone", value: profile?.phone || user?.phone || "—" },
               { label: "Address", value: profile?.address || user?.address || "—" },

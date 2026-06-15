@@ -14,7 +14,6 @@ const AppError = require("./Utils/appError");
 const authRoutes = require("./Routes/auth.route");
 const adminRoutes = require("./Routes/admin.route");
 const userRoutes = require("./Routes/user.route");
-const agentRoutes = require("./Routes/agent.route");
 const kycRoutes = require("./Routes/kyc.route");
 const supportRoutes = require("./Routes/support.route");
 const userProfileRoutes = require("./Routes/userProfile.route");
@@ -60,7 +59,6 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api/agent", agentRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/profile", userProfileRoutes);

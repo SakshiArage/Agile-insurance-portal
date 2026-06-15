@@ -59,7 +59,8 @@ const DashboardContact = () => {
   const [chats, setChats] = useState(() => readChats());
   const [subject, setSubject] = useState("Policy support");
   const [message, setMessage] = useState("");
-
+   const supportPhone = "+91 79726 57424";
+   const [isSending, setIsSending] = useState(false);
   // Filter chats for current user thread
   const userThread = useMemo(
     () => chats.filter((chat) => chat.userEmail === user?.email),
@@ -67,12 +68,14 @@ const DashboardContact = () => {
   );
 
   // Send message handler - creates new chat or adds to existing thread
-  const sendMessage = () => {
-    const text = message.trim();
+const sendMessage = () => {
+  const text = message.trim();
 
-    if (!text) return;
+  if (!text) return;
 
-    // Create new message object with metadata
+  setIsSending(true);
+
+  try {
     const nextMessage = {
       id: `msg_${Date.now()}`,
       from: "user",
@@ -81,15 +84,23 @@ const DashboardContact = () => {
       createdAt: new Date().toISOString(),
     };
 
-    // Check if open chat exists for this user
-    const existing = chats.find((chat) => chat.userEmail === user?.email && chat.status !== "Resolved");
+    const existing = chats.find(
+      (chat) =>
+        chat.userEmail === user?.email &&
+        chat.status !== "Resolved"
+    );
 
-    // Update existing chat or create new one
     const nextChats = existing
       ? chats.map((chat) =>
           chat.id === existing.id
-            ? { ...chat, subject, status: "Open", messages: [...chat.messages, nextMessage], updatedAt: new Date().toISOString() }
-            : chat,
+            ? {
+                ...chat,
+                subject,
+                status: "Open",
+                messages: [...chat.messages, nextMessage],
+                updatedAt: new Date().toISOString(),
+              }
+            : chat
         )
       : [
           {
@@ -106,12 +117,14 @@ const DashboardContact = () => {
           },
           ...chats,
         ];
+
     setChats(nextChats);
     saveChats(nextChats);
     setMessage("");
-  };
-
-
+  } finally {
+    setIsSending(false);
+  }
+};
 
   return (
     <div className="space-y-8">

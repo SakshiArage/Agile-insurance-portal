@@ -18,7 +18,7 @@ const buildAuthResponse = (user) => {
 
 const register = catchAsync(async (req, res, next) => {
   const {
-    full_name,
+    fullName,
     email,
     phone,
     password,
@@ -38,7 +38,7 @@ const register = catchAsync(async (req, res, next) => {
   }
 
   const user = await User.create({
-    full_name,
+    fullName,
     email,
     phone,
     password,
@@ -96,7 +96,7 @@ const me = catchAsync(async (req, res) =>
 
 const updateProfile = catchAsync(async (req, res, next) => {
   const allowedFields = [
-    "full_name",
+    "fullName",
     "email",
     "phone",
     "dob",

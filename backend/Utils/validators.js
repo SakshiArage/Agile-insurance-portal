@@ -9,7 +9,7 @@ const isObjectId = (value) => mongoose.isValidObjectId(value);
 
 const validateRegisterBody = (body) => {
   const errors = [];
-  if (!body.full_name?.trim()) errors.push("full_name is required");
+  if (!body.fullName?.trim()) errors.push("fullName is required");
   if (!isEmail(body.email)) errors.push("email must be valid");
   if (!isPhone(body.phone)) errors.push("phone must be valid");
   if (!body.password || String(body.password).length < 8) errors.push("password must be at least 8 characters");

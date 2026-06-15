@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { apiRequest, getToken } from "../utils/api";
+import {
+  apiRequest,
+  getAdminToken,
+  setAdminToken
+} from "../utils/api";
+
+
 import {
   AlertTriangle,
   ArrowLeft,
@@ -56,7 +62,6 @@ const defaultAdminProfiles = [
     password: "Super@123",
     profilePhoto: "",
     name: "Asha Menon",
-    email: "asha.admin@agileinsure.in",
     role: "Super Admin",
     initials: "AM",
     access: "Full platform access",
@@ -66,7 +71,6 @@ const defaultAdminProfiles = [
     password: "Manager@123",
     profilePhoto: "",
     name: "Rohit Kapoor",
-    email: "rohit.manager@agileinsure.in",
     role: "Insurance Manager",
     initials: "RK",
     access: "Policies, users, requirements",
@@ -76,7 +80,6 @@ const defaultAdminProfiles = [
     password: "Claims@123",
     profilePhoto: "",
     name: "Naina Shah",
-    email: "naina.claims@agileinsure.in",
     role: "Claims Officer",
     initials: "NS",
     access: "Claims and document review",
@@ -86,7 +89,6 @@ const defaultAdminProfiles = [
     password: "Support@123",
     profilePhoto: "",
     name: "Imran Ali",
-    email: "imran.support@agileinsure.in",
     role: "Support Executive",
     initials: "IA",
     access: "Tickets and user replies",
@@ -368,7 +370,7 @@ const settingStorageMap = {
   withdrawals: { prefix: "withdrawalMethods", fields: { bankTransfer: "bankTransfer", upiPayout: "upiPayout", minimumWithdrawal: "minWithdrawal", payoutNote: "payoutInstructions" } },
   forms: { prefix: "policyForms", fields: { healthForm: "healthInsurance", motorForm: "vehicleInsurance", lifeForm: "lifeInsurance", requiredFields: "requiredFields" } },
   features: { prefix: "features", fields: { aiAssistant: "aiAssistant", policyCompare: "policyCompare", claimTracking: "claimTracking", voiceSupport: "voiceSupport" } },
-  regulations: { prefix: "regulations", fields: { coveredItems: "coveredItems", excludedItems: "excludedItems", highValueReviewAmount: "highvaluereviwAmt" } },
+  regulations: { prefix: "regulations", fields: { coveredItems: "coveredItems", excludedItems: "excludedItems", highValueReviewAmount: "highValueReviewAmount" } },
   seo: { prefix: "seo", fields: { metaTitle: "metaTitle", metaDescription: "metaDescription", keywords: "keywords" } },
   pages: { prefix: "pages", fields: { aboutPage: "aboutPage", contactPage: "contactPage", articlesPage: "articlesPage", pageNotice: "pageNotice" } },
   kyc: { prefix: "kyc", fields: { aadhaarRequired: "aadhaarRequired", panRequired: "panRequired", selfieRequired: "selfieRequired", autoRejectIncomplete: "autoRejectIncompleteKYC" } },
@@ -678,13 +680,27 @@ const AdminLogin = ({ adminProfiles, selectedProfile, setSelectedProfile, onLogi
 
           <form
             className="mt-8 space-y-4"
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
-              if (adminId !== selectedProfile.adminId || password !== selectedProfile.password) {
-                setError("Invalid admin ID or password for the selected profile.");
-                return;
+              try {
+                setError("");
+                const response = await apiRequest("/api/admin/auth/login", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    email: selectedProfile.email,
+                    password: password,
+                  }),
+                });
+
+                if (response?.success && response?.data?.token) {
+                setAdminToken(response.data.token);
+                  onLogin();
+                } else {
+                  setError(response?.message || "Invalid credentials.");
+                }
+              } catch (err) {
+                setError(err.message || "Login failed. Please check your credentials or database connection.");
               }
-              onLogin();
             }}
           >
             <label className="block">
@@ -896,7 +912,11 @@ const AdminPage = () => {
     body: "Select a row or action to view operational context here.",
     photo: "",
   });
-
+  useEffect(() => {
+   if(getAdminToken()){
+      setIsAuthenticated(true);
+   }
+}, []);
   const [customerRows, setCustomerRows] = useState([]);
   
 //   const [users, setUsers] = useState([]);
@@ -949,68 +969,68 @@ const activeUsers = customerRows.filter(
         console.warn("Admin settings sync unavailable, using local settings data.", error);
       }
 
-      if (!getToken()) return;
+      if (!getAdminToken()) return;
 
       try {
-        const [dashboardResponse, usersResponse, claimsResponse, policiesResponse, auditResponse] = await Promise.all([
-          apiRequest("/api/admin/dashboard"),
-          apiRequest("/api/admin/users"),
-          apiRequest("/api/admin/claims"),
-          apiRequest("/api/admin/policies"),
-          apiRequest("/api/admin/audit-logs"),
+        const [dashboardResponse, usersResponse, claimsResponse, policiesResponse, auditResponse, supportResponse] = await Promise.all([
+          apiRequest("/api/admin/dashboard", { useAdminToken: true }),
+          apiRequest("/api/admin/users", { useAdminToken: true }),
+          apiRequest("/api/admin/claims", { useAdminToken: true }),
+          apiRequest("/api/admin/policies", { useAdminToken: true }),
+          apiRequest("/api/admin/audit-logs", { useAdminToken: true }),
+          apiRequest("/api/admin/support-tickets", { useAdminToken: true }),
         ]);
 
-       console.log("Users API Response:", usersResponse);
+        console.log("Users API Response:", usersResponse);
 
-const backendUsers =
-  usersResponse?.data?.users ||
-  usersResponse?.data?.data ||
-  usersResponse?.data ||
-  [];
+        const backendUsers =
+          usersResponse?.data?.users ||
+          usersResponse?.data?.data ||
+          usersResponse?.data ||
+          [];
         const backendClaims = Array.isArray(claimsResponse?.data) ? claimsResponse.data : [];
         const backendPolicies = Array.isArray(policiesResponse?.data) ? policiesResponse.data : [];
+        const backendTickets = Array.isArray(supportResponse?.data) ? supportResponse.data : [];
 
-       setCustomerRows(
-  backendUsers.map((user) => ({
-    id: user._id || user.id,
-    name:
-      user.full_name ||
-      user.fullName ||
-      user.name ||
-      "No Name",
+        setCustomerRows(
+          backendUsers.map((user) => ({
+            id: user._id || user.id,
+            name:
+              user.full_name ||
+              user.fullName ||
+              user.name ||
+              "No Name",
 
-    email: user.email || "",
+            email: user.email || "",
 
-    phone:
-      user.phone ||
-      user.mobile ||
-      user.contact ||
-      "Not Added",
+            phone:
+              user.phone ||
+              user.mobile ||
+              user.contact ||
+              "Not Added",
 
-    address:
-      user.address ||
-      user.location ||
-      "Not Added",
+            address:
+              user.address ||
+              user.location ||
+              "Not Added",
 
-    policies:
-      user.policies?.length ||
-      user.policyCount ||
-      0,
+            policies:
+              user.policies?.length ||
+              user.policyCount ||
+              0,
 
-    status:
-      user.status ||
-      (user.is_verified
-        ? "Active"
-        : "Inactive"),
+            status:
+              user.status ||
+              (user.is_verified
+                ? "Active"
+                : "Inactive"),
 
-    city:
-      user.city ||
-      user.address?.city ||
-      "Not Added",
-  }))
-);
-
-
+            city:
+              user.city ||
+              user.address?.city ||
+              "Not Added",
+          }))
+        );
 
         setClaimRows(
           backendClaims.map((claim) => ({
@@ -1031,6 +1051,23 @@ const backendUsers =
             premium: policy.premium_amount ? `INR ${Number(policy.premium_amount).toLocaleString("en-IN")}/mo` : "INR 0/mo",
             duration: policy.end_date ? `${new Date(policy.start_date).toLocaleDateString()} - ${new Date(policy.end_date).toLocaleDateString()}` : "1 year",
             state: policy.status || "Active",
+          })),
+        );
+
+        setSupportChats(
+          backendTickets.map((ticket) => ({
+            id: ticket.id,
+            userId: ticket.userId,
+            userName: ticket.userName,
+            userEmail: ticket.userEmail,
+            userPhone: ticket.userPhone,
+            subject: ticket.subject,
+            status: ticket.status,
+            priority: ticket.priority,
+            assignedAdmin: ticket.assignedAdmin,
+            messages: ticket.messages || [],
+            createdAt: ticket.createdAt,
+            updatedAt: ticket.updatedAt,
           })),
         );
 
@@ -1070,8 +1107,9 @@ const backendUsers =
     });
 
     try {
-      if (getToken()) {
+      if (getAdminToken()) {
         await apiRequest("/api/admin/audit-logs", {
+          useAdminToken: true,
           method: "POST",
           body: JSON.stringify({
             action: actionString,
@@ -1145,10 +1183,73 @@ const backendUsers =
     runAction("Edit opened", `${selectedProfile.name} is editing ${rowKeyFor(target)}.`);
   };
 
-  const saveEditedRecord = () => {
+  const saveEditedRecord = async () => {
     if (!editingRecord) return;
+
+    let updatedDraft = { ...editingRecord.draft };
+
+    if (editingRecord.kind === "users") {
+      try {
+        if (String(editingRecord.key).startsWith("USR")) {
+          // Create user
+          const response = await apiRequest("/api/admin/users", {
+            useAdminToken: true,
+            method: "POST",
+            body: JSON.stringify({
+              name: editingRecord.draft.name,
+              email: editingRecord.draft.email,
+              phone: editingRecord.draft.phone,
+              address: editingRecord.draft.address,
+              status: editingRecord.draft.status,
+            }),
+          });
+          if (response?.success && response?.data) {
+            const newUser = response.data;
+            updatedDraft = {
+              id: newUser._id,
+              name: newUser.full_name,
+              email: newUser.email,
+              phone: newUser.phone,
+              address: newUser.address,
+              policies: 0,
+              status: newUser.is_verified ? "Active" : "Inactive",
+              city: "Not Added",
+            };
+            editingRecord.draft = updatedDraft;
+          }
+        } else {
+          // Update user
+          const response = await apiRequest(`/api/admin/users/${editingRecord.key}`, {
+            useAdminToken: true,
+            method: "PATCH",
+            body: JSON.stringify({
+              name: editingRecord.draft.name,
+              email: editingRecord.draft.email,
+              phone: editingRecord.draft.phone,
+              address: editingRecord.draft.address,
+              status: editingRecord.draft.status,
+            }),
+          });
+          if (response?.success && response?.data) {
+            const updatedUser = response.data;
+            updatedDraft = {
+              ...editingRecord.draft,
+              name: updatedUser.full_name,
+              email: updatedUser.email,
+              phone: updatedUser.phone,
+              address: updatedUser.address,
+              status: updatedUser.is_verified ? "Active" : "Inactive",
+            };
+            editingRecord.draft = updatedDraft;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to save user change to backend:", error);
+      }
+    }
+
     updateRowsForKind(editingRecord.kind, (rows) =>
-      rows.map((row) => (rowKeyFor(row) === editingRecord.key ? { ...row, ...editingRecord.draft } : row)),
+      rows.map((row) => (rowKeyFor(row) === editingRecord.key ? { ...row, ...updatedDraft } : row)),
     );
     addAuditLogEntry(`/api/v4/${editingRecord.kind}/edit -> Saved changes for ${editingRecord.key}`);
     runAction("Changes saved", `${editingRecord.key} was updated by ${selectedProfile.name}.`);
@@ -1405,17 +1506,65 @@ const backendUsers =
     });
   };
 
-  const mutateRows = (kind, target, action) => {
+  const mutateRows = async (kind, target, action) => {
     const targetKey = target.id || target.name || target.user || target.type;
+
+    if (kind === "users" && action === "delete") {
+      try {
+        await apiRequest(`/api/admin/users/${targetKey}`, {
+          useAdminToken: true,
+          method: "DELETE",
+        });
+      } catch (error) {
+        console.error("Failed to delete user from backend:", error);
+        return;
+      }
+    }
+
+    if (kind === "claims" && action === "delete") {
+      try {
+        await apiRequest(`/api/admin/claims/${targetKey}`, {
+          useAdminToken: true,
+          method: "DELETE",
+        });
+      } catch (error) {
+        console.error("Failed to delete claim from backend:", error);
+        return;
+      }
+    }
+
+    if (kind === "claims" && action === "approve") {
+      try {
+        await apiRequest(`/api/admin/claims/${targetKey}`, {
+          useAdminToken: true,
+          method: "PATCH",
+          body: JSON.stringify({ status: "approved" }),
+        });
+      } catch (error) {
+        console.error("Failed to approve claim from backend:", error);
+        return;
+      }
+    }
+
+    if (kind === "claims" && action === "reject") {
+      try {
+        await apiRequest(`/api/admin/claims/${targetKey}`, {
+          useAdminToken: true,
+          method: "PATCH",
+          body: JSON.stringify({ status: "rejected" }),
+        });
+      } catch (error) {
+        console.error("Failed to reject claim from backend:", error);
+        return;
+      }
+    }
+
     const updater = (row) => {
       const rowKey = row.id || row.name || row.user || row.type;
       if (rowKey !== targetKey) return row;
-      if (action === "approve") {
-        if (kind === "claims") return { ...row, status: "Approved" };
-        if (kind === "documents") return { ...row, status: "Approved" };
-        if (kind === "policies") return { ...row, state: "Active" };
-        if (kind === "support") return { ...row, status: "Resolved" };
-        return { ...row, status: "Active" };
+      if ((row.id || row.name || row.user || row.type) === targetKey) {
+        if (action === "approve") return { ...row, status: "Approved" };
+        if (action === "reject") return { ...row, status: "Rejected" };
       }
       return row;
     };
@@ -1437,31 +1586,61 @@ const backendUsers =
     );
   };
 
-  const respondToClaim = (claim) => {
+  const respondToClaim = async (claim) => {
     const message = `Dear ${claim.user}, your ${claim.policy} claim ${claim.id} is under review. Please keep your policy number, hospital bills, identity proof, and bank details ready.`;
-    setClaimRows((rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Under Review", response: message } : row)));
-    addAuditLogEntry(`/api/v4/claims/respond -> Forwarded manual procedural response guidelines message to ${claim.id}`);
-    runAction("Response sent to user", {
-      claimId: claim.id,
-      user: claim.user,
-      response: message,
-    });
+
+    try {
+      await apiRequest(`/api/admin/claims/${claim.id}`, {
+        useAdminToken: true,
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "reviewing",
+          notes: message
+        }),
+      });
+
+      setClaimRows((rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Reviewing" } : row)));
+      addAuditLogEntry(`/api/v4/claims/respond -> Forwarded manual procedural response guidelines message to ${claim.id}`);
+      runAction("Response sent to user", {
+        claimId: claim.id,
+        user: claim.user,
+        response: message,
+      });
+    } catch (error) {
+      console.error("Failed to respond to claim:", error);
+      runAction("Error", `Failed to respond to claim: ${error.message}`);
+    }
   };
 
-  const rejectClaimForMissingDetails = (claim) => {
+  const rejectClaimForMissingDetails = async (claim) => {
     const missing = [];
     if (!claim.amount) missing.push("Claim amount");
     if (!claim.policy) missing.push("Policy type");
     if (claim.status === "Documents") missing.push("Required documents");
     const reason = missing.length ? `Missing details: ${missing.join(", ")}` : "Rejected after verification due to incomplete claim evidence";
-    setClaimRows((rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Rejected", rejectionReason: reason } : row)));
-    addAuditLogEntry(`/api/v4/claims/reject -> Issued fallback state negative evaluation on: ${claim.id}`);
-    runAction("Claim rejected", {
-      claimId: claim.id,
-      user: claim.user,
-      reason,
-      responseToUser: "Your claim was rejected because required details are missing. Please resubmit with complete documents.",
-    });
+
+    try {
+      await apiRequest(`/api/admin/claims/${claim.id}`, {
+        useAdminToken: true,
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "rejected",
+          notes: reason
+        }),
+      });
+
+      setClaimRows((rows) => rows.map((row) => (row.id === claim.id ? { ...row, status: "Rejected" } : row)));
+      addAuditLogEntry(`/api/v4/claims/reject -> Issued fallback state negative evaluation on: ${claim.id}`);
+      runAction("Claim rejected", {
+        claimId: claim.id,
+        user: claim.user,
+        reason,
+        responseToUser: "Your claim was rejected because required details are missing. Please resubmit with complete documents.",
+      });
+    } catch (error) {
+      console.error("Failed to reject claim:", error);
+      runAction("Error", `Failed to reject claim: ${error.message}`);
+    }
   };
 
   const getSettingValue = (settingId, field) => getSettingValueFromStorage(systemSettings, settingId, field);
@@ -1477,6 +1656,7 @@ const backendUsers =
     try {
       const patch = buildSettingPatch(systemSettings, settingId, field, value);
       const response = await apiRequest("/api/admin/settings", {
+        useAdminToken: true,
         method: "PATCH",
         body: JSON.stringify(patch),
       });
@@ -1868,41 +2048,53 @@ const backendUsers =
       );
     }
     if (activePage === "support") {
-      const handleReplyToChat = () => {
+      const handleReplyToChat = async () => {
         if (!selectedChat || !adminReply.trim()) return;
 
-        const nextMessage = {
-          id: `msg_${Date.now()}`,
-          from: "admin",
-          sender: selectedProfile.name,
-          text: adminReply,
-          createdAt: new Date().toISOString(),
-        };
+        try {
+          const response = await apiRequest(`/api/admin/support-tickets/${selectedChat.id}/messages`, {
+            useAdminToken: true,
+            method: "POST",
+            body: JSON.stringify({ text: adminReply }),
+          });
 
-        const nextChats = supportChats.map((chat) =>
-          chat.id === selectedChat.id
-            ? { ...chat, messages: [...chat.messages, nextMessage], updatedAt: new Date().toISOString() }
-            : chat,
-        );
-
-        setSupportChats(nextChats);
-        saveSupportChats(nextChats);
-        setSelectedChat({ ...selectedChat, messages: [...selectedChat.messages, nextMessage] });
-        setAdminReply("");
-        addAuditLogEntry(`/api/v4/support/reply -> Dispatched message feedback interaction thread to ${selectedChat.userName}`);
-        runAction("Reply sent", `Admin response sent to ${selectedChat.userName}.`);
+          if (response?.data) {
+            setSelectedChat(response.data);
+            setSupportChats(supportChats.map(chat =>
+              chat.id === selectedChat.id ? response.data : chat
+            ));
+            setAdminReply("");
+            addAuditLogEntry(`/api/v4/support/reply -> Dispatched message feedback interaction thread to ${selectedChat.userName}`);
+            runAction("Reply sent", `Admin response sent to ${selectedChat.userName}.`);
+          }
+        } catch (error) {
+          console.error("Failed to reply to support ticket:", error);
+          runAction("Error", `Failed to send reply: ${error.message}`);
+        }
       };
 
-      const resolveChat = () => {
+      const resolveChat = async () => {
         if (!selectedChat) return;
-        const nextChats = supportChats.map((chat) =>
-          chat.id === selectedChat.id ? { ...chat, status: "Resolved", updatedAt: new Date().toISOString() } : chat,
-        );
-        setSupportChats(nextChats);
-        saveSupportChats(nextChats);
-        addAuditLogEntry(`/api/v4/support/resolve -> Handled ticket solution verification closure for ${selectedChat.userName}`);
-        setSelectedChat(null);
-        runAction("Chat resolved", `Support ticket for ${selectedChat.userName} marked as resolved.`);
+
+        try {
+          const response = await apiRequest(`/api/admin/support-tickets/${selectedChat.id}`, {
+            useAdminToken: true,
+            method: "PATCH",
+            body: JSON.stringify({ status: "Resolved" }),
+          });
+
+          if (response?.data) {
+            setSupportChats(supportChats.map(chat =>
+              chat.id === selectedChat.id ? response.data : chat
+            ));
+            addAuditLogEntry(`/api/v4/support/resolve -> Handled ticket solution verification closure for ${selectedChat.userName}`);
+            setSelectedChat(null);
+            runAction("Chat resolved", `Support ticket for ${selectedChat.userName} marked as resolved.`);
+          }
+        } catch (error) {
+          console.error("Failed to resolve support ticket:", error);
+          runAction("Error", `Failed to resolve ticket: ${error.message}`);
+        }
       };
 
       return (

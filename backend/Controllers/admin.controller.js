@@ -8,6 +8,18 @@ const AuditLog = require("../Models/auditlog.model");
 const catchAsync = require("../Utils/catchAsync");
 const AppError = require("../Utils/appError");
 
+const flattenObject = (obj, prefix = "") => {
+  return Object.keys(obj).reduce((acc, key) => {
+    const pre = prefix ? prefix + "." : "";
+    if (obj[key] !== null && typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+      Object.assign(acc, flattenObject(obj[key], pre + key));
+    } else {
+      acc[pre + key] = obj[key];
+    }
+    return acc;
+  }, {});
+};
+
 const getDashboard = catchAsync(async (req, res) => {
   const [totalUsers, totalAgents, activePolicies, pendingClaims, revenueAgg, pendingKyc] = await Promise.all([
     User.countDocuments({ role: "user" }),
@@ -42,7 +54,7 @@ const getUsers = catchAsync(async (req, res) => {
   try{
     const users = await User.find()
     .select(
-      "_id full_name email phone is_verified created_at"
+      "_id full_name email phone address is_verified created_at"
     );
     const formattedUsers = users.map((user) => ({
       id: user._id,
@@ -51,11 +63,11 @@ const getUsers = catchAsync(async (req, res) => {
       phone: user.phone,
       address: user.address,
       status: user.is_verified? "Active": "Inactive",
-      joinedAt:user.createdAt,
+      joinedAt:user.created_at,
     }));
     res.status(200).json({
       success: true,
-      users: formattedUsers,
+      data: formattedUsers,
     });
 
   }
@@ -65,6 +77,63 @@ const getUsers = catchAsync(async (req, res) => {
       message: error.message
     });
   }
+});
+
+const createUser = catchAsync(async (req, res, next) => {
+  const { name, email, phone, address, status } = req.body;
+  if (!email) {
+    return next(new AppError("Email is required", 400));
+  }
+  const existing = await User.findOne({ $or: [{ email }, ...(phone ? [{ phone }] : [])] });
+  if (existing) {
+    return next(new AppError("Email or phone already exists", 409));
+  }
+  const user = await User.create({
+    full_name: name || "New Customer",
+    email,
+    phone: phone || `+91 ${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+    address: address || "",
+    is_verified: status === "Active",
+    kyc_status: "pending",
+    password: "User@123",
+    role: "user"
+  });
+  res.status(201).json({ success: true, data: user });
+});
+
+const updateUser = catchAsync(async (req, res, next) => {
+  const { name, email, phone, address, status } = req.body;
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  if (email && email !== user.email) {
+    const existing = await User.findOne({ email });
+    if (existing) return next(new AppError("Email already exists", 409));
+    user.email = email;
+  }
+
+  if (phone && phone !== user.phone) {
+    const existing = await User.findOne({ phone });
+    if (existing) return next(new AppError("Phone already exists", 409));
+    user.phone = phone;
+  }
+
+  if (name) user.full_name = name;
+  if (address !== undefined) user.address = address;
+  if (status !== undefined) user.is_verified = (status === "Active");
+
+  await user.save();
+  res.status(200).json({ success: true, data: user });
+});
+
+const deleteUser = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndDelete(req.params.id);
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+  res.status(200).json({ success: true, message: "User deleted successfully" });
 });
 
 
@@ -105,9 +174,10 @@ const getSystemSettings = catchAsync(async (req, res) => {
 });
 
 const updateSystemSettings = catchAsync(async (req, res) => {
+  const flattened = flattenObject(req.body);
   const settings = await SystemSetting.findOneAndUpdate(
     {},
-    { $set: req.body },
+    { $set: flattened },
     {
       new: true,
       upsert: true,
@@ -176,9 +246,138 @@ const reviewKyc = catchAsync(async (req, res, next) => {
   });
 });
 
+const updateClaim = catchAsync(async (req, res, next) => {
+  const { status, notes, assignedAdmin } = req.body;
+
+  if (status && !["pending", "reviewing", "approved", "rejected"].includes(status)) {
+    return next(new AppError("Invalid claim status", 400));
+  }
+
+  const claim = await Claim.findByIdAndUpdate(
+    req.params.id,
+    { status, notes, assignedAdmin },
+    { new: true, runValidators: true }
+  ).populate("user", "full_name email").populate("policy", "policy_name");
+
+  if (!claim) {
+    return next(new AppError("Claim not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Claim updated successfully",
+    data: claim,
+  });
+});
+
+const deleteClaim = catchAsync(async (req, res, next) => {
+  const claim = await Claim.findByIdAndDelete(req.params.id);
+
+  if (!claim) {
+    return next(new AppError("Claim not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Claim deleted successfully",
+  });
+});
+
+const getSupportTicketsAdmin = catchAsync(async (req, res) => {
+  const SupportTicket = require("../Models/contact.model");
+
+  const tickets = await SupportTicket.find()
+    .populate("user", "full_name email phone")
+    .populate("assignedAdmin", "full_name email")
+    .sort({ createdAt: -1 });
+
+  const formattedTickets = tickets.map(ticket => ({
+    id: ticket._id,
+    userId: ticket.user._id,
+    userName: ticket.user.full_name,
+    userEmail: ticket.user.email,
+    userPhone: ticket.user.phone,
+    subject: ticket.subject,
+    status: ticket.status,
+    priority: ticket.priority,
+    assignedAdmin: ticket.assignedAdmin,
+    messages: ticket.messages,
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.updatedAt,
+  }));
+
+  res.status(200).json({
+    success: true,
+    data: formattedTickets,
+  });
+});
+
+const updateSupportTicket = catchAsync(async (req, res, next) => {
+  const SupportTicket = require("../Models/contact.model");
+  const { status, priority, assignedAdmin } = req.body;
+
+  const validStatuses = ["Open", "In Progress", "Resolved"];
+  if (status && !validStatuses.includes(status)) {
+    return next(new AppError("Invalid status", 400));
+  }
+
+  const ticket = await SupportTicket.findByIdAndUpdate(
+    req.params.id,
+    { status, priority, assignedAdmin },
+    { new: true }
+  ).populate("user", "full_name email").populate("assignedAdmin", "full_name email");
+
+  if (!ticket) {
+    return next(new AppError("Support ticket not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Support ticket updated",
+    data: ticket,
+  });
+});
+
+const replyToSupportTicket = catchAsync(async (req, res, next) => {
+  const SupportTicket = require("../Models/contact.model");
+  const { text } = req.body;
+
+  if (!text || !String(text).trim()) {
+    return next(new AppError("Message text is required", 400));
+  }
+
+  const ticket = await SupportTicket.findById(req.params.id);
+  if (!ticket) {
+    return next(new AppError("Support ticket not found", 404));
+  }
+
+  ticket.messages.push({
+    sender: req.user._id,
+    senderRole: "admin",
+    text: String(text).trim(),
+    createdAt: new Date(),
+  });
+
+  await ticket.save();
+
+  const updatedTicket = await SupportTicket.findById(ticket._id)
+    .populate("user", "full_name email")
+    .populate("assignedAdmin", "full_name email")
+    .populate("messages.sender", "full_name email");
+
+  res.status(200).json({
+    success: true,
+    message: "Reply added successfully",
+    data: updatedTicket,
+  });
+});
+
 module.exports = {
   getDashboard,
   getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
   getAgents,
   getPolicies,
   getClaims,
@@ -189,4 +388,9 @@ module.exports = {
   createAuditLog,
   getAuditLogs,
   reviewKyc,
+  updateClaim,
+  deleteClaim,
+  getSupportTicketsAdmin,
+  updateSupportTicket,
+  replyToSupportTicket,
 };

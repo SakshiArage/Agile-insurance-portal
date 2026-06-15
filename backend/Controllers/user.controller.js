@@ -7,7 +7,7 @@ const userModel = require("../Models/userModel.model");
 const SupportTicket = require("../Models/contact.model");
 
 const getDashboard = catchAsync(async (req, res) => {
-  const [activePolicies, upcomingPremiums, claimStatus, paymentHistory, kycRequests, userModel, supportTickets] = 
+  const [activePolicies, upcomingPremiums, claimStatus, paymentHistory, kycRequests, userDetails, supportTickets] = 
   await Promise.all([
     Policy.find({ user: req.user._id, status: "active" }).sort({ createdAt: -1 }).limit(6),
     Payment.find({ user: req.user._id, status: "pending" }).sort({ createdAt: -1 }).limit(6),
@@ -41,7 +41,7 @@ const getDashboard = catchAsync(async (req, res) => {
       supportTickets,
       profileCompletion: Math.round((filledFields.length / profileFields.length) * 100),
       kycRequests,
-      user: userModel,
+      user: userDetails,
     },
   });
 });

@@ -14,7 +14,7 @@ const ensureProfile = async (userId) => {
 
     profile = await UserProfile.create({
       user: userId,
-      full_name: user.full_name || user.fullName || "",
+      fullName: user.fullName || user.fullName || "",
       email: user.email || "",
       phone: user.phone || "",
       address: user.address || "",
@@ -41,11 +41,11 @@ const getProfile = catchAsync(async (req, res) => {
 });
 
 const updateProfile = catchAsync(async (req, res, next) => {
-  const { full_name, email, phone, address, profile_photo, nominee } = req.body;
+  const { fullName, email, phone, address, profile_photo, nominee } = req.body;
 
   const profile = await ensureProfile(req.user._id);
 
-  if (full_name !== undefined) profile.full_name = full_name;
+  if (fullName !== undefined) profile.fullName = fullName;
   if (email !== undefined) profile.email = email;
   if (phone !== undefined) profile.phone = phone;
   if (address !== undefined) profile.address = address;

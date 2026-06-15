@@ -25,8 +25,8 @@ const createSupportTicket = catchAsync(async (req, res, next) => {
   });
 
   const ticketWithUser = await SupportTicket.findById(ticket._id)
-    .populate("user", "full_name email")
-    .populate("assignedAdmin", "full_name email");
+    .populate("user", "fullName email")
+    .populate("assignedAdmin", "fullName email");
 
   res.status(201).json({
     success: true,
@@ -38,8 +38,8 @@ const createSupportTicket = catchAsync(async (req, res, next) => {
 const getSupportTickets = catchAsync(async (req, res) => {
   const tickets = await SupportTicket.find({ user: req.user._id })
     .sort({ createdAt: -1 })
-    .populate("user", "full_name email")
-    .populate("assignedAdmin", "full_name email");
+    .populate("user", "fullName email")
+    .populate("assignedAdmin", "fullName email");
 
   res.status(200).json({
     success: true,

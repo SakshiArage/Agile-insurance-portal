@@ -50,6 +50,7 @@ const authenticateAdmin = catchAsync(async (req, res, next) => {
 
   // Attach admin to request so downstream controllers can use req.admin
   req.admin = admin;
+  req.user = admin;
   req.tokenPayload = decoded;
   next();
 });

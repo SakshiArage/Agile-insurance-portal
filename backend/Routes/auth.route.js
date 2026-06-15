@@ -6,7 +6,8 @@ const {
   me,
   updateProfile,
   changePassword,
-} = require("../Controllers/auth.controller");
+} = require("../Controllers/authUser.controller");
+
 const authenticateUser = require("../Middlewares/auth.middleware");
 const { validateRegister, validateLogin, validateUpdateProfile, validateChangePassword } = require("../Middlewares/validation.middleware");
 

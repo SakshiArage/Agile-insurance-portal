@@ -29,7 +29,7 @@ const userProfileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    full_name: { type: String, trim: true, default: "" },
+    fullName: { type: String, trim: true, default: "" },
     email: { type: String, trim: true, lowercase: true, default: "" },
     phone: { type: String, trim: true, default: "" },
     address: { type: String, trim: true, default: "" },

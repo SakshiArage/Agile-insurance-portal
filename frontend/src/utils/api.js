@@ -1,4 +1,5 @@
 const TOKEN_KEY = "agile_insurance_api_token_v1";
+const ADMIN_TOKEN_KEY = "agile_insurance_admin_token_v1";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
 
 // Frontend-only session token helpers. No backend API server is required.
@@ -9,21 +10,31 @@ export const setToken = (token) => {
   else localStorage.removeItem(TOKEN_KEY);
 };
 
-export const apiRequest = async (path, options = {}) => {
-  const token = getToken();
-  const headers = new Headers(options.headers || {});
+// Separate token store for the admin portal so an admin session never collides
+// with (or gets overwritten by) a user-portal session in the same browser.
+export const getAdminToken = () => localStorage.getItem(ADMIN_TOKEN_KEY);
 
-  if (!(options.body instanceof FormData)) {
+export const setAdminToken = (token) => {
+  if (token) localStorage.setItem(ADMIN_TOKEN_KEY, token);
+  else localStorage.removeItem(ADMIN_TOKEN_KEY);
+};
+
+export const apiRequest = async (path, options = {}) => {
+  const { useAdminToken, skipAuth, ...fetchOptions } = options;
+  const token = useAdminToken ? getAdminToken() : getToken();
+  const headers = new Headers(fetchOptions.headers || {});
+
+  if (!(fetchOptions.body instanceof FormData)) {
     if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   }
 
-  if (token && !options.skipAuth) {
+  if (token && !skipAuth) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`, {
     credentials: "include",
-    ...options,
+    ...fetchOptions,
     headers,
   });
 
