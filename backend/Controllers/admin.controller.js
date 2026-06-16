@@ -152,7 +152,7 @@ const getAgents = catchAsync(async (req, res) => {
 });
 
 const getPolicies = catchAsync(async (req, res) => {
-  const policies = await Policy.find().populate("user", "fullName email phone role").sort({ createdAt: -1 });
+  const policies = await Policy.find().populate("admin", "fullName email role").sort({ createdAt: -1 });
   res.status(200).json({ success: true, data: policies });
 });
 

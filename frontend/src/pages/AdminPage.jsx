@@ -1166,11 +1166,17 @@ const activeUsers = customerRows.filter(
         }
       } catch (error) {
         console.warn("Admin backend sync unavailable, using local demo data.", error);
+        if (String(error?.message || "").toLowerCase().includes("unauthorized")) {
+          clearAdminSession();
+          setIsAuthenticated(false);
+          setSelectedProfile(loadAdmins()[0]);
+          navigate("/admin");
+        }
       }
     };
 
     hydrateAdminData();
-  }, [selectedProfile.name]);
+  }, [selectedProfile.name, navigate]);
 
   const addAuditLogEntry = async (actionString, moduleName = "admin") => {
     const nextLog = {
