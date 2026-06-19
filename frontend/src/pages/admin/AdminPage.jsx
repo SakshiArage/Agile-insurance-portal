@@ -131,7 +131,10 @@ const AdminPage = () => {
               <PageComponent />
             </section>
 
-            <RightPanel onNavigate={openPage} />
+            <RightPanel
+  onNavigate={openPage}
+  currentPage={activePage}
+/>
           </div>
         </main>
       </div>

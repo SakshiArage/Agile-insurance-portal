@@ -1,9 +1,10 @@
 // src/components/layout/RightPanel.jsx
 import { useSelector } from "react-redux";
 
-const RightPanel = ({ onNavigate }) => {
+const RightPanel = ({ onNavigate, currentPage }) => {
   const { selectedProfile } = useSelector((s) => s.auth);
   const { detailPanel } = useSelector((s) => s.ui);
+
   const claimRows = useSelector((s) => s.claims.rows);
   const documentRows = useSelector((s) => s.documents.rows);
   const supportChats = useSelector((s) => s.support.chats);
@@ -11,10 +12,7 @@ const RightPanel = ({ onNavigate }) => {
 
   return (
     <aside className="hidden min-h-0 overflow-y-auto border-l border-slate-200 bg-white p-5 xl:block">
-      <div className="sticky top-0 bg-white pb-4">
-        <div className="text-sm font-black text-slate-950">Right Panel</div>
-        <div className="mt-1 text-xs font-semibold text-slate-500">Independent scroll area</div>
-      </div>
+      
 
       <div className="space-y-5">
         {/* Admin Card */}
@@ -39,21 +37,48 @@ const RightPanel = ({ onNavigate }) => {
         </div>
 
         {/* Operations Queue */}
-        <div className="rounded-lg border border-slate-200 p-4">
-          <div className="text-sm font-black text-slate-950">Operations Queue</div>
-          <div className="mt-3 space-y-2 text-sm font-bold text-slate-700">
-            {[
-              { label: "Pending verifications", count: documentRows.filter((d) => d.status === "Pending").length, page: "documents" },
-              { label: "Claims in review", count: claimRows.filter((c) => c.status === "Under Review").length, page: "claims" },
-              { label: "Open support chats", count: supportChats.filter((s) => s.status !== "Resolved").length, page: "support" },
-              { label: "Quotes requested", count: requirementRows.length, page: "requirements" },
-            ].map(({ label, count, page }) => (
-              <button key={label} onClick={() => onNavigate(page)} className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100">
-                <span>{label}</span><span>{count}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Operations Queue - Show only on Dashboard */}
+{currentPage === "dashboard" && (
+  <div className="rounded-lg border border-slate-200 p-4">
+    <div className="text-sm font-black text-slate-950">
+      Operations Queue
+    </div>
+
+    <div className="mt-3 space-y-2 text-sm font-bold text-slate-700">
+      {[
+        {
+          label: "Pending verifications",
+          count: documentRows.filter((d) => d.status === "Pending").length,
+          page: "documents",
+        },
+        {
+          label: "Claims in review",
+          count: claimRows.filter((c) => c.status === "Under Review").length,
+          page: "claims",
+        },
+        {
+          label: "Open support chats",
+          count: supportChats.filter((s) => s.status !== "Resolved").length,
+          page: "support",
+        },
+        {
+          label: "Quotes requested",
+          count: requirementRows.length,
+          page: "requirements",
+        },
+      ].map(({ label, count, page }) => (
+        <button
+          key={label}
+          onClick={() => onNavigate(page)}
+          className="flex w-full justify-between rounded-lg bg-slate-50 px-3 py-3 text-left hover:bg-slate-100"
+        >
+          <span>{label}</span>
+          <span>{count}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
         {/* Quick Actions */}
         <div className="rounded-lg border border-slate-200 p-4">
