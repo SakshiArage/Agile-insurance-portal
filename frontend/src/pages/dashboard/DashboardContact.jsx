@@ -59,6 +59,11 @@ const DashboardContact = () => {
   const [chats, setChats] = useState(() => readChats());
   const [subject, setSubject] = useState("Policy support");
   const [message, setMessage] = useState("");
+
+
+  const [statusMessage, setStatusMessage] = useState("");
+  // const [isSending, setIsSending] = useState(false);
+  // const supportPhone = contactDetails[0].value;
    const supportPhone = "+91 79726 57424";
    const [isSending, setIsSending] = useState(false);
   // Filter chats for current user thread
@@ -66,6 +71,8 @@ const DashboardContact = () => {
     () => chats.filter((chat) => chat.userEmail === user?.email),
     [chats, user?.email],
   );
+  const tickets = userThread;
+  const loadingTickets = false;
 
   // Send message handler - creates new chat or adds to existing thread
 const sendMessage = () => {
@@ -74,12 +81,14 @@ const sendMessage = () => {
   if (!text) return;
 
   setIsSending(true);
+    setStatusMessage("");
 
   try {
     const nextMessage = {
       id: `msg_${Date.now()}`,
       from: "user",
       sender: user?.fullName || "Customer",
+      senderRole: "user",
       text,
       createdAt: new Date().toISOString(),
     };
@@ -121,6 +130,8 @@ const sendMessage = () => {
     setChats(nextChats);
     saveChats(nextChats);
     setMessage("");
+    setStatusMessage("Message sent. Our support team will reply in this thread.");
+    setIsSending(false);
   } finally {
     setIsSending(false);
   }
@@ -294,15 +305,15 @@ const sendMessage = () => {
                   <div className="mt-3 space-y-2">
                     {(ticket.messages || []).map((item) => (
                       <div
-                        key={item._id || `${ticket._id}-${item.createdAt || Math.random()}`}
+                        key={item._id || item.id || `${ticket._id || ticket.id}-${item.createdAt}`}
                         className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
-                          item.senderRole === "admin"
+                          item.senderRole === "admin" || item.from === "admin"
                             ? "bg-blue-50 text-blue-900 border-l-4 border-blue-600 dark:bg-blue-500/10 dark:text-blue-100 dark:border-blue-400"
                             : "bg-white text-slate-700 border-l-4 border-slate-400 dark:bg-white/10 dark:text-slate-100 dark:border-slate-500"
                         }`}
                       >
                         <div className="mb-1 text-[11px] font-black uppercase tracking-wide opacity-75">
-                          {item.senderRole === "admin" ? "Admin" : "You"}
+                          {item.senderRole === "admin" || item.from === "admin" ? "Admin" : "You"}
                         </div>
                         <div className="leading-relaxed">{item.text}</div>
                       </div>

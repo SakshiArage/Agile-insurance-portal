@@ -194,7 +194,7 @@ console.log(systemSettings);
   const activeLabel = useMemo(() => {
     const match = navItems.find((i) => i.to === location.pathname);
     return match?.label ?? "Agile Insurance";
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
 
   const goTo = (to) => {
     navigate(to);

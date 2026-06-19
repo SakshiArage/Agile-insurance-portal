@@ -41,8 +41,15 @@ const registerAdmin = catchAsync(async (req, res, next) => {
         });
     }
     catch (error) {
-    console.error(error);
-    return next(new AppError(error.message, 500));
+        console.error(error);
+        return next(new AppError(error.message, 500));
+         // Mongoose validation errors
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return next(new AppError(messages.join(", "), 400));
+    }
+    return next(new AppError("Internal server error", 500));
+  
 }
 });
 
@@ -100,8 +107,8 @@ const loginAdmin = catchAsync(async (req, res, next) => {
         });
     }
     catch (error) {
-    console.error(error);
-    return next(new AppError(error.message, 500));
+        console.error(error);
+        return next(new AppError(error.message, 500));
 }
 });
  

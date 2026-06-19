@@ -12,19 +12,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/useAuth";
 import { apiRequest } from "../utils/api";
-// Header brand text, dropdown labels, CTA labels, and trust-strip labels live in this file.
-// Update this path if the Agile Insurance brand logo file is renamed or replaced.
-const AGILE_LOGO_SRC = "/agile-insurance-logo.svg";
-const STORAGE_SETTINGS = "agile_insurance_system_settings_v1";
 
-// const readPortalSettings = () => {
-//     try {
-//         const stored = localStorage.getItem(STORAGE_SETTINGS);
-//         return stored ? JSON.parse(stored) : {};
-//     } catch {
-//         return {};
-//     }
-// };
+const AGILE_LOGO_SRC = "/agile-insurance-logo.svg";
+// const STORAGE_SETTINGS = "agile_insurance_system_settings_v1";
+
+
 
 const Navbar = () => {
     const [activeDropdown, setActiveDropdown] = useState(null);

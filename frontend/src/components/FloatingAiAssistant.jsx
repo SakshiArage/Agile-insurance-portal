@@ -73,7 +73,7 @@ const FloatingAiAssistant = ({ contextLabel = "Agile AI", prompt = null }) => {
     } finally {
       setBusy(false);
     }
-  }, [busy, messages]);
+  }, [busy,contextLabel, messages]);
 
   useEffect(() => {
     const cleanPrompt = String(prompt?.text || "").trim();

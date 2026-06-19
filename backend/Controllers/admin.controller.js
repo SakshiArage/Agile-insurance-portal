@@ -22,11 +22,9 @@ const flattenObject = (obj, prefix = "") => {
 
 const getDashboard = catchAsync(async (req, res) => {
 
-
-
-  const [totalUsers, totalAgents, activePolicies, pendingClaims, revenueAgg, pendingKyc] = await Promise.all([
+  const [totalUsers, activePolicies, pendingClaims, revenueAgg, pendingKyc] = await Promise.all([
     User.countDocuments({ role: "user" }),
-    User.countDocuments({ role: "agent" }),
+    // User.countDocuments({ role: "agent" }),
     Policy.countDocuments({ status: "active" }),
     Claim.countDocuments({ status: "pending" }),
     Payment.aggregate([{ $match: { status: "success" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
@@ -146,10 +144,10 @@ const deleteUser = catchAsync(async (req, res, next) => {
 
 
 
-const getAgents = catchAsync(async (req, res) => {
-  const agents = await User.find({ role: "agent" }).select("-password").sort({ created_at: -1 });
-  res.status(200).json({ success: true, data: agents });
-});
+// const getAgents = catchAsync(async (req, res) => {
+//   const agents = await User.find({ role: "agent" }).select("-password").sort({ created_at: -1 });
+//   res.status(200).json({ success: true, data: agents });
+// });
 
 const getPolicies = catchAsync(async (req, res) => {
   const policies = await Policy.find().populate("admin", "fullName email role").sort({ createdAt: -1 });
@@ -397,7 +395,7 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
-  getAgents,
+  // getAgents,
   getPolicies,
   getClaims,
   getPayments,

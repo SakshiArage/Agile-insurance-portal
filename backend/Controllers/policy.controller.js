@@ -1,79 +1,98 @@
-const Policy = require("../models/Policy");
+const Policy = require("../Models/policy.model");
 
-//  ADMIN — Create a new policy
-//  Route  : POST /api/policies/admin/create
-//  Access : Admin only  (protect with verifyAdmin middleware)
-//  Body   : all Policy schema fields
 const createPolicy = async (req, res) => {
   try {
-    const {
-      category,
-      companyName,
-      companyLogo,
-      policyName,
-      monthlyPremium,
-      coverageAmount,
-      claimRatio,
-      validityYears,
-      rating,
-      emiAvailable,
-      policyType,
-      features,
-      description,
-    } = req.body;
+    // Ensure route is called by an authenticated admin middleware which attaches `req.admin`
+    const admin = req.admin || (req.user && req.user._id);
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: admin credentials required.",
+      });
+    }
 
-    // Required fields
-    if (!category || !companyName || !policyName) {
+    const body = req.body || {};
+    // normalize input fields (accept both camelCase and snake_case variants)
+    const companyName = (body.companyName || body.company_name || "").trim();
+    const companyLogo = body.companyLogo || body.company_logo || "";
+    const policyName = (
+      body.policyName ||
+      body.policy_name ||
+      body.policy_name ||
+      ""
+    ).trim();
+    const policy_number =
+      body.policy_number || body.policyNumber || `POL-${Date.now()}`;
+    const premium_amount =
+      body.premium_amount || body.premiumAmount || body.monthlyPremium || 0;
+    const coverage_amount = body.coverage_amount || body.coverageAmount || 0;
+    const category = body.category || "general";
+    const policy_type =
+      body.policy_type || body.policyType || body.policyType || "";
+    const policy_desc =
+      body.policy_desc || body.description || body.policyDesc || "";
+    const features = Array.isArray(body.features)
+      ? body.features
+      : body.features
+        ? [body.features]
+        : [];
+    const emiAvailable =
+      body.emiAvailable !== undefined ? Boolean(body.emiAvailable) : false;
+    const validityYears = body.validityYears || body.validity_years || 1;
+    const rating = body.rating || 0;
+    const claimRatio = body.claimRatio || body.claim_ratio || 0;
+
+    if (!companyName || !policyName) {
       return res.status(400).json({
         success: false,
-        message: "category, companyName, and policyName are required.",
+        message: "companyName and policyName are required.",
       });
     }
 
     // Prevent duplicate policy names under same company
     const duplicate = await Policy.findOne({
-      companyName: companyName.trim(),
-      policyName: policyName.trim(),
+      companyName: companyName,
+      policy_name: policyName,
     });
-
     if (duplicate) {
       return res.status(409).json({
         success: false,
-        message: `"${policyName}" already exists for ${companyName}.`,
+        message: `${policyName} already exists for ${companyName}.`,
       });
     }
 
-    // Create and save 
-    const policy = await Policy.create({
+    // Build policy doc matching the Policy schema
+    const policyDoc = {
+      admin: admin._id || admin,
+      companyName,
+      companyLogo,
+      policyName,
+      policy_number,
+      premiumAmount: Number(premium_amount),
+      coverageAmount: Number(coverage_amount),
       category,
-      companyName:    companyName.trim(),
-      companyLogo:    companyLogo   || "",
-      policyName:     policyName.trim(),
-      monthlyPremium: monthlyPremium || 0,
-      coverageAmount: coverageAmount || 0,
-      claimRatio:     claimRatio     || 0,
-      validityYears:  validityYears  || 1,
-      rating:         rating         || 0,
-      emiAvailable:   emiAvailable   || false,
-      policyType:     policyType     || "",
-      features:       features       || [],
-      description:    description    || "",
-      isActive:       true,
-    });
+      policyType: policy_type,
+      description: policy_desc,
+      features,
+      emiAvailable,
+      validityYears,
+      rating,
+      claimRatio,
+      isActive: true,
+    };
 
-    return res.status(201).json({
-      success: true,
-      message: "Policy created successfully.",
-      policy,
-    });
+    const policy = await Policy.create(policyDoc);
 
+    return res
+      .status(201)
+      .json({ success: true, message: "Policy created successfully.", policy });
   } catch (error) {
-    // Mongoose validation error (e.g. category not in enum)
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: messages.join(", ") });
+      return res
+        .status(400)
+        .json({ success: false, message: messages.join(", ") });
     }
-
     console.error("[createPolicy]", error);
     return res.status(500).json({
       success: false,
@@ -91,12 +110,14 @@ const updatePolicy = async (req, res) => {
 
     const updated = await Policy.findByIdAndUpdate(
       id,
-      { $set: req.body },        // only overwrite fields that are sent
-      { new: true, runValidators: true }
+      { $set: req.body }, // only overwrite fields that are sent
+      { new: true, runValidators: true },
     );
 
     if (!updated) {
-      return res.status(404).json({ success: false, message: "Policy not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy not found." });
     }
 
     return res.status(200).json({
@@ -104,14 +125,17 @@ const updatePolicy = async (req, res) => {
       message: "Policy updated successfully.",
       policy: updated,
     });
-
   } catch (error) {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: messages.join(", ") });
+      return res
+        .status(400)
+        .json({ success: false, message: messages.join(", ") });
     }
     if (error.name === "CastError") {
-      return res.status(400).json({ success: false, message: "Invalid policy ID." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid policy ID." });
     }
 
     console.error("[updatePolicy]", error);
@@ -119,14 +143,12 @@ const updatePolicy = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
 //  ADMIN — Soft-delete (deactivate) a policy
 //  Route  : DELETE /api/policies/admin/:id
 //  Access : Admin only
 //
 //  We never hard-delete — existing purchases still reference this
 //  policy. Setting isActive = false hides it from users.
-// ═══════════════════════════════════════════════════════════════════
 const deactivatePolicy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -134,11 +156,13 @@ const deactivatePolicy = async (req, res) => {
     const policy = await Policy.findByIdAndUpdate(
       id,
       { isActive: false },
-      { new: true }
+      { new: true },
     );
 
     if (!policy) {
-      return res.status(404).json({ success: false, message: "Policy not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy not found." });
     }
 
     return res.status(200).json({
@@ -146,10 +170,11 @@ const deactivatePolicy = async (req, res) => {
       message: "Policy deactivated successfully.",
       policy,
     });
-
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(400).json({ success: false, message: "Invalid policy ID." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid policy ID." });
     }
     console.error("[deactivatePolicy]", error);
     return res.status(500).json({ success: false, message: "Server error." });
@@ -177,87 +202,77 @@ const getAllPoliciesAdmin = async (req, res) => {
 };
 
 //  USER — Get all active policies by category
-//  Route  : GET /api/policies/category/:category
-//  Access : Public (user does not need to be logged in to browse)
-//
 //  Frontend sends: /api/policies/category/health
-//  Returns lightweight card data — only what a listing page needs.
+// GET /api/policies
+// GET /api/policies?category=health
+
 const getPoliciesByCategory = async (req, res) => {
   try {
-    const { category } = req.params;
+    // Support category as either query param or path param
+    const categoryParam = (
+      req.query.category ||
+      req.params.category ||
+      ""
+    ).toString();
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 12);
 
-    const allowedCategories = ["health", "life", "auto", "home", "travel"];
-
-    if (!allowedCategories.includes(category.toLowerCase())) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid category. Choose from: ${allowedCategories.join(", ")}`,
-      });
+    // Build filter — always only active policies
+    const filter = { isActive: true };
+    if (categoryParam && categoryParam !== "all") {
+      filter.category = categoryParam.toLowerCase();
     }
 
-    const policies = await Policy.find({
-      category:  category.toLowerCase(),
-      isActive:  true,
-    }).select(
-      // Only the fields a policy card on the listing page needs
-      "companyName companyLogo policyName monthlyPremium coverageAmount claimRatio rating emiAvailable validityYears features"
-    );
+    const skip = (page - 1) * limit;
 
-    if (!policies.length) {
-      return res.status(404).json({
-        success: false,
-        message: `No active policies found for category: ${category}`,
-      });
-    }
+    const [policies, total] = await Promise.all([
+      Policy.find(filter)
+        .sort({ createdAt: -1 }) // newest first
+        .skip(skip)
+        .limit(limit)
+        .populate("admin", "fullName email"), // include admin info
+      Policy.countDocuments(filter),
+    ]);
 
-    return res.status(200).json({
-      success:  true,
-      category: category.toLowerCase(),
-      count:    policies.length,
-      policies,
+    res.status(200).json({
+      success: true,
+      count: policies.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: policies,
     });
-
   } catch (error) {
     console.error("[getPoliciesByCategory]", error);
-    return res.status(500).json({ success: false, message: "Server error." });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-//  USER — Get full details of a single policy
-//  Route  : GET /api/policies/:id
-//  Access : Public
-//
-//  Returns every field so the React detail page renders completely
-//  from a single API call — no second request needed.
-// ═══════════════════════════════════════════════════════════════════
+// GET /api/policies/:id
 const getPolicyById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const policy = await Policy.findById(id);
+    const policy = await Policy.findById(req.params.id).populate(
+      "admin",
+      "name email",
+    );
 
     if (!policy) {
-      return res.status(404).json({
-        success: false,
-        message: "Policy not found.",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      policy,
-    });
-
+    res.status(200).json({ success: true, data: policy });
   } catch (error) {
+    // Handle invalid ObjectId format
     if (error.name === "CastError") {
-      return res.status(400).json({ success: false, message: "Invalid policy ID format." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid policy ID" });
     }
-    console.error("[getPolicyById]", error);
-    return res.status(500).json({ success: false, message: "Server error." });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 module.exports = {
   // Admin

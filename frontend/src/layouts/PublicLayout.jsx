@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/NavBer";
+import Navbar from "../components/NavBar";
 import Footer from "../components/Footer";
 import ScrollToTop from "../components/ScrollToTop";
 import FloatingAiAssistant from "../components/FloatingAiAssistant";

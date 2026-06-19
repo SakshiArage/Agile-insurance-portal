@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 const cors = require("cors");
+const rateLimit = require('express-rate-limit');
 
 dotenv.config({ path: ".env" });
 
@@ -17,6 +18,8 @@ const userRoutes = require("./Routes/user.route");
 const kycRoutes = require("./Routes/kyc.route");
 const supportRoutes = require("./Routes/support.route");
 const userProfileRoutes = require("./Routes/userProfile.route");
+const policyRoutes = require("./Routes/policy.routes");
+
 
 const PORT = appConfig.port;
 
@@ -34,6 +37,19 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting (100 req / 15 min per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { success: false, message: 'Too many requests, please slow down.' },
+});
+app.use('/api/', limiter);
 // Request Logger Middleware
 // app.use((req, res, next) => {
 //   console.log("\n========== REQUEST ==========");
@@ -62,15 +78,25 @@ app.use("/api/user", userRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/profile", userProfileRoutes);
+app.use("/api/policies", policyRoutes);
 
-// Handle Undefined Routes
-app.use((req, res, next) => {
-  next(new AppError(`Route not found: ${req.originalUrl}`, 404));
+//404 handler 
+app.use((req, res) => {
+  res.status(404).
+      json({ 
+        success: false, 
+        message: `Route ${req.originalUrl} not found` 
+      });
 });
 
-// Global Error Handler
-app.use(errorHandler);
-
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error',
+  });
+});
 // Start Server
 app.listen(PORT, () => {
   console.log(`Server is running on ${PORT}`);

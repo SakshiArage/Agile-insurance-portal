@@ -6,7 +6,7 @@ const { validateKycRequest } = require("../Middlewares/validation.middleware");
 
 const router = express.Router();
 
-router.post("/", authenticateUser, authorizeRoles("user", "agent", "admin"), validateKycRequest, createKycRequest);
+router.post("/", authenticateUser, authorizeRoles("user", "admin"), validateKycRequest, createKycRequest);
 router.get("/me", authenticateUser, getMyKycRequests);
 
 module.exports = router;

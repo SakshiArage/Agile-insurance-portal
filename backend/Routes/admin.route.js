@@ -8,7 +8,7 @@ const {
   createUser,
   updateUser,
   deleteUser,
-  getAgents,
+  // getAgents,
   getPolicies,
   getClaims,
   getPayments,
@@ -44,7 +44,7 @@ router.get("/policies", getPolicies);
 router.get("/claims", getClaims);
 router.patch("/claims/:id", updateClaim);
 router.delete("/claims/:id", deleteClaim);
-router.get("/agents", getAgents);
+// router.get("/agents", getAgents);
 router.get("/payments", getPayments);
 router.get("/kyc-requests", getKycRequests);
 router.patch("/kyc-requests/:id", reviewKyc);

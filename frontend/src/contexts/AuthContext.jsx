@@ -44,8 +44,11 @@ const saveSession = (token, nextUser) => {
   localStorage.setItem(STORAGE_SESSION, JSON.stringify({ user: nextUser }));
 };
 
+
+
+
 // Developer note: replace this with a backend/email OTP provider when real email delivery is added.
-const createOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+// const createOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
 const bootstrapUser = () => {
   const legacy = localStorage.getItem(STORAGE_LEGACY);
@@ -135,7 +138,8 @@ export const AuthProvider = ({ children }) => {
 
     writeUsers([...users, { ...verifiedUser, password: pending.password }]);
     localStorage.removeItem(STORAGE_PENDING);
-    saveSession(verifiedUser);
+    saveSession(`frontend_demo_${Date.now()}`, verifiedUser);
+    // saveSession(verifiedUser);
     setUser(verifiedUser);
     return verifiedUser;
   };
@@ -169,7 +173,7 @@ export const AuthProvider = ({ children }) => {
       address: "",
       createdAt: new Date().toISOString(),
     };
-    saveSession(googleUser);
+    saveSession(`frontend_demo_${Date.now()}`, googleUser);
     setUser(googleUser);
     return googleUser;
   };

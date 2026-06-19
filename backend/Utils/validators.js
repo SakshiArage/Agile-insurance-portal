@@ -14,7 +14,7 @@ const validateRegisterBody = (body) => {
   if (!isPhone(body.phone)) errors.push("phone must be valid");
   if (!body.password || String(body.password).length < 8) errors.push("password must be at least 8 characters");
   if (body.gender && !["male", "female", "other"].includes(body.gender)) errors.push("gender is invalid");
-  if (body.role && !["user", "admin", "agent"].includes(body.role)) errors.push("role is invalid");
+  if (body.role && !["user", "admin"].includes(body.role)) errors.push("role is invalid");
   return errors;
 };
 
@@ -30,7 +30,7 @@ const validateUpdateProfileBody = (body) => {
   if (body.email && !isEmail(body.email)) errors.push("email must be valid");
   if (body.phone && !isPhone(body.phone)) errors.push("phone must be valid");
   if (body.gender && !["male", "female", "other"].includes(body.gender)) errors.push("gender is invalid");
-  if (body.role && !["user", "admin", "agent"].includes(body.role)) errors.push("role is invalid");
+  if (body.role && !["user", "admin"].includes(body.role)) errors.push("role is invalid");
   return errors;
 };
 

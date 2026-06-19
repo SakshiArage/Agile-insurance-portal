@@ -312,18 +312,109 @@ const CategoryPage = () => {
   const { isAuthenticated } = useAuth();
   
   const category = getCategoryBySlug(categorySlug);
-  const allPolicies = useMemo(() => getPoliciesByCategory(categorySlug), [categorySlug]);
-  
+  const [allPolicies, setAllPolicies] = useState(() => getPoliciesByCategory(categorySlug));
+  const [loadingPolicies, setLoadingPolicies] = useState(false);
+  const [policiesError, setPoliciesError] = useState(null);
+
+  // Map frontend slug to backend category param
+  const mapSlugToCategory = (slug) => {
+    if (!slug) return slug;
+    if (slug.includes("health")) return "health";
+    if (slug.includes("term")) return "term";
+    if (slug.includes("car") || slug.includes("vehicle")) return "auto";
+    if (slug.includes("life")) return "life";
+    if (slug.includes("travel")) return "travel";
+    if (slug.includes("home")) return "home";
+    if (slug.includes("business")) return "business";
+    return slug.replace(/-insurance$/i, "");
+  };
+
+  // Normalize backend policy object to frontend shape used by this page
+  const normalizePolicy = (p) => {
+    const company = p.companyName || p.company || p.company_brand || "Unknown";
+    const policyName = p.policy_name || p.policyName || p.name || "Policy";
+    const premiumMonthly = p.premium_amount || p.monthlyPremium || 0;
+    const coverageAmount = p.coverage_amount || p.coverageAmount || 0;
+    const rating = p.rating || 4.0;
+    const validityYears = p.validityYears || p.validity_years || 1;
+    const emiAvailable = !!p.emiAvailable;
+    const policyType = p.policyType || p.policy_type || "Standard";
+    const keyBenefits = p.features || p.keyBenefits || [];
+
+    const companyBrand = p.companyLogo
+      ? { initials: company.slice(0, 2).toUpperCase(), color: "bg-blue-600" }
+      : { initials: company.slice(0, 2).toUpperCase(), color: "bg-blue-600" };
+
+    return {
+      id: p._id || p.policy_number || `${company}_${policyName}`,
+      company,
+      companyBrand,
+      policyName,
+      premiumMonthly,
+      premiumLabel: formatInr(premiumMonthly),
+      coverageAmount,
+      coverageLabel: formatInr(coverageAmount),
+      claimSettlementRatio: p.claimRatio || p.claim_ratio || 90,
+      validityYears,
+      emiAvailable,
+      familyCoverage: p.familyCoverage || false,
+      policyType,
+      rating,
+      keyBenefits,
+      aiBadge: p.aiBadge || null,
+    };
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchPolicies = async () => {
+      setLoadingPolicies(true);
+      setPoliciesError(null);
+      try {
+        const cat = mapSlugToCategory(categorySlug);
+        const res = await apiRequest(`/api/policies/category/${encodeURIComponent(cat)}`);
+        // backend returns { success, count, total, data: [policies] }
+        const apiPolicies = Array.isArray(res?.data) ? res.data : (Array.isArray(res?.policies) ? res.policies : []);
+        const normalized = apiPolicies.map(normalizePolicy);
+        if (mounted) setAllPolicies(normalized);
+      } catch (err) {
+        console.error("Failed to fetch policies for category", categorySlug, err);
+        if (mounted) setPoliciesError(err.message || String(err));
+      } finally {
+        if (mounted) setLoadingPolicies(false);
+      }
+    };
+
+    fetchPolicies();
+    return () => (mounted = false);
+  }, [categorySlug]);
+
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [compareIds, setCompareIds] = useState([]);
-  
-  const premiumMin = useMemo(() => Math.min(...allPolicies.map((p) => p.premiumMonthly)), [allPolicies]);
-  const premiumMax = useMemo(() => Math.max(...allPolicies.map((p) => p.premiumMonthly)), [allPolicies]);
-  const coverageMin = useMemo(() => Math.min(...allPolicies.map((p) => p.coverageAmount)), [allPolicies]);
-  const coverageMax = useMemo(() => Math.max(...allPolicies.map((p) => p.coverageAmount)), [allPolicies]);
-  
+
+  const premiumMin = useMemo(() => {
+    if (!allPolicies || !allPolicies.length) return 0;
+    return Math.min(...allPolicies.map((p) => p.premiumMonthly || 0));
+  }, [allPolicies]);
+  const premiumMax = useMemo(() => {
+    if (!allPolicies || !allPolicies.length) return 1000;
+    return Math.max(...allPolicies.map((p) => p.premiumMonthly || 0));
+  }, [allPolicies]);
+  const coverageMin = useMemo(() => {
+    if (!allPolicies || !allPolicies.length) return 0;
+    return Math.min(...allPolicies.map((p) => p.coverageAmount || 0));
+  }, [allPolicies]);
+  const coverageMax = useMemo(() => {
+    if (!allPolicies || !allPolicies.length) return 1000000;
+    return Math.max(...allPolicies.map((p) => p.coverageAmount || 0));
+  }, [allPolicies]);
+
+
+
   const [search, setSearch] = useState("");
   const [premiumRange, setPremiumRange] = useState([premiumMin, premiumMax]);
+
+
   const [coverageRange, setCoverageRange] = useState([coverageMin, coverageMax]);
   const [claimMin, setClaimMin] = useState(90);
   const [policyType, setPolicyType] = useState("All");
@@ -440,6 +531,30 @@ const CategoryPage = () => {
       </div>
     );
   }
+
+  if (loadingPolicies) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-white px-4 py-16">
+        <div className="text-center">
+          <div className="text-xl font-black text-slate-900">Loading policies…</div>
+          <div className="mt-2 text-sm text-slate-600">Fetching available plans from the server.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (policiesError) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-white px-4 py-16">
+        <div className="text-center">
+          <div className="text-xl font-black text-red-600">Failed to load policies</div>
+          <div className="mt-2 text-sm text-slate-600">{policiesError}</div>
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="bg-slate-50">

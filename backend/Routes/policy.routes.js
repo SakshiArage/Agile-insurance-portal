@@ -8,15 +8,15 @@ const {
   getAllPoliciesAdmin,
   getPoliciesByCategory,
   getPolicyById,
-} = require("../controllers/policyController");
+} = require("../controllers/policy.controller");
 
-const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
+const authenticateAdmin = require("../Middlewares/admin.middleware");
 
-// ── Admin routes (login + admin role required) ───────────────────
-router.post  ("/admin/create",   verifyToken, verifyAdmin, createPolicy);
-router.put   ("/admin/:id",      verifyToken, verifyAdmin, updatePolicy);
-router.delete("/admin/:id",      verifyToken, verifyAdmin, deactivatePolicy);
-router.get   ("/admin/all",      verifyToken, verifyAdmin, getAllPoliciesAdmin);
+// Admin routes (login + admin role required) 
+router.post  ("/admin/create",   authenticateAdmin, createPolicy);
+router.put   ("/admin/:id",      authenticateAdmin, updatePolicy);
+router.delete("/admin/:id",      authenticateAdmin, deactivatePolicy);
+router.get   ("/admin/all",      authenticateAdmin, getAllPoliciesAdmin);
 
 // ── User / public routes ─────────────────────────────────────────
 // NOTE: /category/:category must come before /:id

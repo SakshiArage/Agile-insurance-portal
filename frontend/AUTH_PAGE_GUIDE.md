@@ -103,7 +103,7 @@ Displays:
 ## 5. FILE CHANGES
 
 **Modified:**
-- `src/components/NavBer.jsx` - Admin button always shows text
+- `src/components/NavBar.jsx` - Admin button always shows text
 - `src/pages/AuthPage.jsx` - Restored two-column layout
 
 **New Elements:**
@@ -117,7 +117,7 @@ Displays:
 ## 6. CONTENT EDITING GUIDE
 
 ### To Edit Admin Button Label:
-**File:** `src/components/NavBer.jsx` (Line 197-204)
+**File:** `src/components/NavBar.jsx` (Line 197-204)
 ```jsx
 <span>Admin</span>  // Change this text
 ```
