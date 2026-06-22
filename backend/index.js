@@ -21,8 +21,6 @@ const userProfileRoutes = require("./Routes/userProfile.route");
 const policyRoutes = require("./Routes/policy.routes");
 
 
-const PORT = appConfig.port;
-
 // Connect Database
 connectDB();
 
@@ -97,7 +95,4 @@ app.use((err, req, res, next) => {
     message: err.message || 'Internal server error',
   });
 });
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server is running on ${PORT}`);
-});
+module.exports = app;
