@@ -91,7 +91,7 @@ app.use((req, res) => {
 
 // Global error handler
 app.use(errorHandler);
-if (require.main === module) {
+if (require.main === module && !process.env.VERCEL) {
   app.listen(5000, () => {
     console.log("Server running on port 5000");
   });
