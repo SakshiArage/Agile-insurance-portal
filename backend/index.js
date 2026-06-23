@@ -29,7 +29,13 @@ connectDB().catch((error) => {
 // Middleware
 app.use(
   cors({
-    origin: appConfig.clientUrl,
+    origin(origin, callback) {
+      if (appConfig.isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new AppError(`CORS blocked origin: ${origin}`, 403));
+    },
     credentials: true,
   })
 );

@@ -7,9 +7,11 @@ const parseUrlList = (value, fallback) => {
 
   return normalized
     .split(",")
-    .map((url) => url.trim())
+    .map((url) => url.trim().replace(/\/$/, ""))
     .filter(Boolean);
 };
+
+const vercelPreviewOriginPattern = /^https:\/\/agile-insurance-portal-[a-z0-9-]+\.vercel\.app$/i;
 
 const appConfig = {
   get port() {
@@ -30,7 +32,14 @@ const appConfig = {
       "http://localhost:5174",
       "https://agile-insurance-portal.vercel.app",
       "https://agile-insurance-portal-ten.vercel.app",
+      "https://agile-insurance-portal-6yus.vercel.app",
     ]);
+  },
+  isAllowedOrigin(origin) {
+    if (!origin) return true;
+
+    const normalizedOrigin = normalizeEnvValue(origin).replace(/\/$/, "");
+    return this.clientUrl.includes(normalizedOrigin) || vercelPreviewOriginPattern.test(normalizedOrigin);
   },
 };
 
