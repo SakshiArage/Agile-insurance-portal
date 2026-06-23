@@ -2,7 +2,7 @@ const TOKEN_KEY = "agile_insurance_api_token_v1";
 const ADMIN_TOKEN_KEY = "agile_insurance_admin_token_v1";
 const ADMIN_PROFILE_KEY = "agile_insurance_admin_profile_v1";
 const DEFAULT_API_BASE_URL = import.meta.env.PROD
-  ? "https://agile-insurance-portal-ten.vercel.app"
+  ? "https://agile-insurance-backend.vercel.app"
   : "http://localhost:5000";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "");
 
@@ -12,7 +12,6 @@ const initialsFromName = (name = "") => {
   return (parts[0]?.slice(0, 2) || "AD").toUpperCase();
 };
 
-// Frontend-only session token helpers. No backend API server is required.
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
 export const setToken = (token) => {
