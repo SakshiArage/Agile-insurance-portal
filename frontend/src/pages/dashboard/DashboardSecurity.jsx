@@ -50,7 +50,7 @@ const DashboardSecurity = () => {
               onClick={() => update({ twoFactor: !twoFactor, bankLinked })}
               className={[
                 "w-full rounded-2xl px-6 py-3 text-sm font-black shadow-sm transition sm:w-auto",
-                twoFactor ? "bg-emerald-600 text-white" : "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100",
+                twoFactor ? "bg-emerald-600 text-white" : "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700",
               ].join(" ")}
             >
               {twoFactor ? "Disable" : "Enable"}

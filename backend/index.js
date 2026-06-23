@@ -22,7 +22,9 @@ const policyRoutes = require("./Routes/policy.routes");
 
 
 // Connect Database
-connectDB();
+connectDB().catch((error) => {
+  console.error("MongoDB startup connection failed:", error.message);
+});
 
 // Middleware
 app.use(
@@ -88,11 +90,11 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error('Server error:', err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error',
+app.use(errorHandler);
+if (require.main === module) {
+  app.listen(5000, () => {
+    console.log("Server running on port 5000");
   });
-});
+}
+
 module.exports = app;

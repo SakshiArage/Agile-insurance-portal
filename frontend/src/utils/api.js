@@ -1,7 +1,10 @@
 const TOKEN_KEY = "agile_insurance_api_token_v1";
 const ADMIN_TOKEN_KEY = "agile_insurance_admin_token_v1";
 const ADMIN_PROFILE_KEY = "agile_insurance_admin_profile_v1";
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://agile-insurance-portal-ten.vercel.app").replace(/\/$/, "");
+const DEFAULT_API_BASE_URL = import.meta.env.PROD
+  ? "https://agile-insurance-portal-ten.vercel.app"
+  : "http://localhost:5000";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "");
 
 const initialsFromName = (name = "") => {
   const parts = name.trim().split(/\s+/).filter(Boolean);

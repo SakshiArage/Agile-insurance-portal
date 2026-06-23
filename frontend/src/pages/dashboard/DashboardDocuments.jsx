@@ -8,6 +8,7 @@ const DashboardDocuments = () => {
   const [purchases, setPurchases] = useState(() => load("purchases", []));
   const [vault, setVault] = useState(() => load("documents", []));
   const [busy, setBusy] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const kycStatus = useMemo(() => {
     const has = purchases.some((p) => p.kyc?.filename);
@@ -16,6 +17,17 @@ const DashboardDocuments = () => {
 
   const upload = async (file) => {
     if (!file) return;
+
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      setUploadError("Only PDF files are allowed.");
+      return;
+    }
+
+    setUploadError("");
     setBusy(true);
     try {
       const dataUrl = await fileToDataUrl(file);
@@ -58,11 +70,25 @@ const DashboardDocuments = () => {
             <h1 className="mt-6 text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">Documents</h1>
             <p className="mt-2 text-slate-600 dark:text-slate-300">KYC status, policy PDFs, invoices, and uploads.</p>
           </div>
-          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-4 text-sm font-black text-white shadow-sm hover:opacity-95">
-            <input type="file" className="hidden" disabled={busy} onChange={(e) => upload(e.target.files?.[0])} />
-            <FileUp size={18} />
-            {busy ? "Uploading..." : "Upload document"}
-          </label>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-4 text-sm font-black text-white shadow-sm hover:opacity-95">
+              <input
+                type="file"
+                accept=".pdf,application/pdf"
+                className="hidden"
+                disabled={busy}
+                onChange={(event) => {
+                  upload(event.target.files?.[0]);
+                  event.target.value = "";
+                }}
+              />
+              <FileUp size={18} />
+              {busy ? "Uploading..." : "Upload PDF"}
+            </label>
+            <span className={`text-xs font-semibold ${uploadError ? "text-rose-500" : "text-slate-500 dark:text-slate-400"}`}>
+              {uploadError || "PDF files only"}
+            </span>
+          </div>
         </div>
       </div>
 
